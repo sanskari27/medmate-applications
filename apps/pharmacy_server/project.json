@@ -1,0 +1,30 @@
+{
+  "name": "pharmacy_server",
+  "projectType": "application",
+  "targets": {
+    "lint": {
+      "command": "docker build --target lint -t medmate-pharmacy_server-lint .",
+      "options": { "cwd": "apps/pharmacy_server" }
+    },
+    "typecheck": {
+      "command": "docker build --target typecheck -t medmate-pharmacy_server-typecheck .",
+      "options": { "cwd": "apps/pharmacy_server" }
+    },
+    "unit": {
+      "command": "docker build --target unit -t medmate-pharmacy_server-unit .",
+      "options": { "cwd": "apps/pharmacy_server" }
+    },
+    "integration": {
+      "command": "docker build --target integration -t medmate-pharmacy_server-integration .",
+      "options": { "cwd": "apps/pharmacy_server" }
+    },
+    "build": {
+      "command": "docker build --target build -t medmate-pharmacy_server-build .",
+      "options": { "cwd": "apps/pharmacy_server" }
+    },
+    "docker": {
+      "command": "docker build --target runtime -t medmate-pharmacy_server .",
+      "options": { "cwd": "apps/pharmacy_server" }
+    }
+  }
+}

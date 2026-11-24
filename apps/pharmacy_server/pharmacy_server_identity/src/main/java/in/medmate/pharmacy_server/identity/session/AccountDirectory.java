@@ -1,0 +1,111 @@
+package in.medmate.pharmacy_server.identity.session;
+
+import in.medmate.pharmacy_server.identity.access.AccountPrincipal;
+import in.medmate.pharmacy_server.identity.access.AccountType;
+import in.medmate.pharmacy_server.identity.access.PharmacyRole;
+import in.medmate.pharmacy_server.identity.access.StaffSubtype;
+import in.medmate.pharmacy_server.identity.access.VerificationStatus;
+import in.medmate.pharmacy_server.identity.store.IdentityStore;
+import in.medmate.pharmacy_server.identity.store.PharmacyStore;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Service;
+
+@Service
+@Profile({"local", "prod", "identity-it"})
+public class AccountDirectory {
+
+    private final IdentityStore accounts;
+    private final PharmacyStore pharmacies;
+
+    public AccountDirectory(IdentityStore accounts, PharmacyStore pharmacies) {
+        this.accounts = accounts;
+        this.pharmacies = pharmacies;
+    }
+
+    public AccountPrincipal load(UUID id) {
+        return accounts.findAccount(id).map(this::principal).orElse(null);
+    }
+
+    public AccountPrincipal load(IdentityStore.AccountRow account) {
+        return principal(account);
+    }
+
+    public Map<UUID, String> displayNames(Collection<UUID> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Map.of();
+        }
+        return accounts.displayNames(ids);
+    }
+
+    public Map<UUID, String> pharmacyNames(Collection<UUID> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Map.of();
+        }
+        return pharmacies.names(ids);
+    }
+
+    public boolean ownerAccountDisabled(AccountPrincipal principal) {
+        if (principal == null || principal.accountType() != AccountType.PHARMACY || principal.pharmacyId() == null) {
+            return false;
+        }
+        if (principal.pharmacyRole() == PharmacyRole.OWNER) {
+            return principal.disabled();
+        }
+        return pharmacies.ownerDisabled(principal.pharmacyId());
+    }
+
+    private AccountPrincipal principal(IdentityStore.AccountRow account) {
+        UUID pharmacyId = null;
+        PharmacyRole role = null;
+        VerificationStatus status = null;
+        String stage = null;
+        String comment = null;
+        String pharmacyType = null;
+        if (account.type() == AccountType.PHARMACY) {
+            PharmacyStore.PharmacyRow owned =
+                    pharmacies.findByOwner(account.id()).orElse(null);
+            if (owned != null) {
+                pharmacyId = owned.id();
+                role = PharmacyRole.OWNER;
+                status = owned.status();
+                stage = owned.rejectionStage();
+                comment = owned.rejectionComment();
+                pharmacyType = owned.pharmacyType();
+            } else {
+                UUID memberOf = pharmacies.membership(account.id()).orElse(null);
+                if (memberOf != null) {
+                    PharmacyStore.PharmacyRow pharmacy =
+                            pharmacies.findById(memberOf).orElseThrow();
+                    pharmacyId = pharmacy.id();
+                    role = PharmacyRole.STAFF;
+                    status = pharmacy.status();
+                    stage = pharmacy.rejectionStage();
+                    comment = pharmacy.rejectionComment();
+                    pharmacyType = pharmacy.pharmacyType();
+                }
+            }
+        }
+        Set<StaffSubtype> subtypes = accounts.subtypes(account.id());
+        Set<String> permissions = accounts.permissions(account.id());
+        boolean pinSet = accounts.pinHash(account.id()).isPresent();
+        return new AccountPrincipal(
+                account.id(),
+                account.phone(),
+                account.type(),
+                account.displayName(),
+                account.disabled(),
+                pharmacyId,
+                role,
+                status,
+                stage,
+                comment,
+                subtypes,
+                permissions,
+                pinSet,
+                pharmacyType);
+    }
+}

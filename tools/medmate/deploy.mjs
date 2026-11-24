@@ -2,12 +2,14 @@ import { execFileSync } from "node:child_process";
 import { access, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { orderedGates, validateConfig } from "./config.mjs";
+import { mergeEnvLines } from "./env.mjs";
 import { assertDomainPointsHere, publicIpv4 } from "./dns.mjs";
 
 const RESOLVERS = ["1.1.1.1", "8.8.8.8"];
 const CADDY_SITES = "/opt/stack/caddy/sites";
 const CREATE_DB = "/opt/stack/postgres/create-app-db.sh";
 const DB_ENV_DIR = "/opt/stack/postgres/apps";
+const STORAGE_ENV_DIR = "/opt/stack/storage/apps";
 
 export async function loadApps(repoRoot) {
   const appsDir = path.join(repoRoot, "apps");
@@ -69,6 +71,7 @@ export async function deploy(repoRoot) {
   }
   for (const app of apps) {
     if (app.config.database) await ensureDatabase(repoRoot, app.config.name);
+    await ensureStorage(repoRoot, app.config.name);
     await writeCompose(app);
     execFileSync(
       "docker",
@@ -105,6 +108,29 @@ async function ensureDatabase(repoRoot, name) {
   }
   if (!/^DATABASE_URL=/m.test(current)) {
     const next = `${current.trim()}${current.trim() ? "\n" : ""}DATABASE_URL=${url}\n`;
+    await writeFile(secret, next, { mode: 0o600 });
+  }
+}
+
+async function ensureStorage(repoRoot, name) {
+  const source = path.join(STORAGE_ENV_DIR, `${name}.env`);
+  let incoming = "";
+  try {
+    incoming = await readFile(source, "utf8");
+  } catch (error) {
+    if (error.code === "ENOENT") return;
+    throw error;
+  }
+  const secret = path.join(repoRoot, ".secrets", `${name}.env`);
+  await mkdir(path.dirname(secret), { recursive: true, mode: 0o700 });
+  let current = "";
+  try {
+    current = await readFile(secret, "utf8");
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+  const next = mergeEnvLines(current, incoming);
+  if (next !== current && next !== `${current.trim()}\n`) {
     await writeFile(secret, next, { mode: 0o600 });
   }
 }

@@ -26,6 +26,29 @@ export function parseEnvBundle(text) {
   return apps;
 }
 
+export function mergeEnvLines(current, incoming) {
+  const lines = [];
+  const keys = new Set();
+  for (const line of envLines(current)) {
+    lines.push(line);
+    keys.add(line.slice(0, line.indexOf("=")));
+  }
+  for (const line of envLines(incoming)) {
+    const key = line.slice(0, line.indexOf("="));
+    if (keys.has(key)) continue;
+    lines.push(line);
+    keys.add(key);
+  }
+  return lines.length === 0 ? "" : `${lines.join("\n")}\n`;
+}
+
+function envLines(text) {
+  return text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0 && !line.startsWith("#") && line.includes("="));
+}
+
 export async function writeEnvFiles(repoRoot, apps) {
   const directory = path.join(repoRoot, ".secrets");
   await mkdir(directory, { recursive: true, mode: 0o700 });

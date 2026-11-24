@@ -1,0 +1,14 @@
+{
+  "name": "pharmacy_server",
+  "kind": "java-springboot",
+  "domain": "pharmacy-server.medmate.in",
+  "port": 8080,
+  "database": true,
+  "qualityGates": [
+    "lint",
+    "typecheck",
+    "unit",
+    "build",
+    "docker"
+  ]
+}

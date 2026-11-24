@@ -1,0 +1,39 @@
+logging:
+  structured:
+    format:
+      console: ecs
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  flyway:
+    enabled: true
+
+medmate:
+  jwt:
+    secret: ${MEDMATE_JWT_SECRET}
+    access-seconds: 900
+    refresh-seconds: 2592000
+  admin-bootstrap-token: ${MEDMATE_ADMIN_BOOTSTRAP_TOKEN}
+  sms:
+    base-url: ${MEDMATE_SMS_BASE_URL:}
+    api-key: ${MEDMATE_SMS_API_KEY:}
+  mail:
+    mode: resend
+    from: "Medmate <noreply@nammamedmate.com>"
+    resend-api-key: ${RESEND_API_KEY:}
+  uploads:
+    bucket: ${S3_BUCKET:${APP_UPLOADS_BUCKET:}}
+    prefix: ${APP_UPLOADS_PREFIX:app-uploads/medmate-server}
+    region: ${S3_REGION:${AWS_REGION:us-east-1}}
+    endpoint: ${S3_ENDPOINT:}
+    public-endpoint: ${S3_PUBLIC_ENDPOINT:}
+    access-key: ${S3_ACCESS_KEY:}
+    secret-key: ${S3_SECRET_KEY:}
+    force-path-style: ${S3_FORCE_PATH_STYLE:false}
+  catalog:
+    url: ${MEDICINE_DATASOURCE_URL}
+    username: ${MEDICINE_DATASOURCE_USERNAME}
+    password: ${MEDICINE_DATASOURCE_PASSWORD}
