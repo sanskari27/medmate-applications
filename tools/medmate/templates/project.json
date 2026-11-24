@@ -1,0 +1,30 @@
+{
+  "name": "__NAME__",
+  "projectType": "application",
+  "targets": {
+    "lint": {
+      "command": "docker build --target lint -t medmate-__NAME__-lint .",
+      "options": { "cwd": "apps/__NAME__" }
+    },
+    "typecheck": {
+      "command": "docker build --target typecheck -t medmate-__NAME__-typecheck .",
+      "options": { "cwd": "apps/__NAME__" }
+    },
+    "unit": {
+      "command": "docker build --target unit -t medmate-__NAME__-unit .",
+      "options": { "cwd": "apps/__NAME__" }
+    },
+    "integration": {
+      "command": "docker build --target integration -t medmate-__NAME__-integration .",
+      "options": { "cwd": "apps/__NAME__" }
+    },
+    "build": {
+      "command": "docker build --target build -t medmate-__NAME__-build .",
+      "options": { "cwd": "apps/__NAME__" }
+    },
+    "docker": {
+      "command": "docker build --target runtime -t medmate-__NAME__ .",
+      "options": { "cwd": "apps/__NAME__" }
+    }
+  }
+}

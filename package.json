@@ -1,0 +1,14 @@
+{
+  "name": "medmate-applications",
+  "private": true,
+  "packageManager": "pnpm@10.23.0",
+  "scripts": {
+    "medmate": "node tools/medmate/cli.mjs"
+  },
+  "devDependencies": {
+    "nx": "24.0.6"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

@@ -1,0 +1,32 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy on the VPS
+        env:
+          SSH_KEY: ${{ secrets.MEDMATE_SSH_PRIVATE_KEY }}
+          HOST: ${{ secrets.MEDMATE_HOST }}
+          USERNAME: ${{ secrets.MEDMATE_USER }}
+          APP_ENVS: ${{ secrets.MEDMATE_APP_ENVS }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SSH_KEY}" ] || [ -z "${HOST}" ] || [ -z "${USERNAME}" ]; then
+            echo "Set the GitHub secrets MEDMATE_SSH_PRIVATE_KEY, MEDMATE_HOST, and MEDMATE_USER." >&2
+            exit 1
+          fi
+          mkdir -p ~/.ssh
+          printf '%s\n' "${SSH_KEY}" > ~/.ssh/medmate
+          chmod 600 ~/.ssh/medmate
+          ssh-keyscan -H "${HOST}" >> ~/.ssh/known_hosts
+          ssh -i ~/.ssh/medmate -o StrictHostKeyChecking=yes "${USERNAME}@${HOST}" \
+            "cd /home/medmate/medmate-applications && git pull --ff-only && pnpm install --frozen-lockfile"
+          printf '%s' "${APP_ENVS}" | ssh -i ~/.ssh/medmate -o StrictHostKeyChecking=yes \
+            "${USERNAME}@${HOST}" "cd /home/medmate/medmate-applications && pnpm medmate load-env"
+          ssh -i ~/.ssh/medmate -o StrictHostKeyChecking=yes "${USERNAME}@${HOST}" \
+            "cd /home/medmate/medmate-applications && pnpm medmate deploy"
