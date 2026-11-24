@@ -2,6 +2,10 @@
   "name": "__NAME__",
   "projectType": "application",
   "targets": {
+    "format": {
+      "command": "docker build --target format -t medmate-__NAME__-format .",
+      "options": { "cwd": "apps/__NAME__" }
+    },
     "lint": {
       "command": "docker build --target lint -t medmate-__NAME__-lint .",
       "options": { "cwd": "apps/__NAME__" }

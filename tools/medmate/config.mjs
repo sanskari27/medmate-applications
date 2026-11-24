@@ -7,6 +7,7 @@ export const KINDS = [
 ];
 
 export const GATES = [
+  "format",
   "lint",
   "typecheck",
   "unit",

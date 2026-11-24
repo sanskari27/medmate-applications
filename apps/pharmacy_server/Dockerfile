@@ -42,6 +42,9 @@ COPY pharmacy_server_oversight/src pharmacy_server_oversight/src
 COPY pharmacy_server_prep/src pharmacy_server_prep/src
 COPY pharmacy_server_app/src pharmacy_server_app/src
 
+FROM dev AS format
+RUN mvn -B spotless:check
+
 FROM dev AS lint
 RUN mvn -B spotless:check
 

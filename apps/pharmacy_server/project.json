@@ -2,6 +2,10 @@
   "name": "pharmacy_server",
   "projectType": "application",
   "targets": {
+    "format": {
+      "command": "docker build --target format -t medmate-pharmacy_server-format .",
+      "options": { "cwd": "apps/pharmacy_server" }
+    },
     "lint": {
       "command": "docker build --target lint -t medmate-pharmacy_server-lint .",
       "options": { "cwd": "apps/pharmacy_server" }

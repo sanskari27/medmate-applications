@@ -6,6 +6,9 @@ RUN corepack enable && corepack prepare pnpm@10.23.0 --activate && pnpm install
 FROM deps AS source
 COPY . .
 
+FROM source AS format
+RUN pnpm format
+
 FROM source AS lint
 RUN pnpm lint
 

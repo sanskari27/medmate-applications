@@ -26,7 +26,7 @@ From `apps/pharmacy_server`: `make format`, then `make verify`.
 
 - Surefire runs unit tests and `@WebMvcTest` slices.
 - Failsafe runs classes named `*IT`.
-- Spotless uses Palantir Java Format during `verify`.
+- Spotless uses Palantir Java Format during `verify` and as the `format` deploy gate.
 - A new HTTP route adds a Bruno request under `bruno/medmate/<module>/` and reuses `examplePharmacyId`, `examplePhone`, and `exampleRequestId`.
 
 ## Runtime

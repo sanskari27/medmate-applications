@@ -4,6 +4,9 @@ COPY pom.xml .
 RUN mvn -B -DskipTests dependency:go-offline
 COPY src ./src
 
+FROM dev AS format
+RUN mvn -B spotless:check
+
 FROM dev AS lint
 RUN mvn -B -DskipTests compile
 

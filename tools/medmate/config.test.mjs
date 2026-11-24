@@ -30,7 +30,8 @@ test("rejects an unknown kind and an unknown gate", () => {
 });
 
 test("orders gates in the platform order", () => {
-  assert.deepEqual(orderedGates(["docker", "lint", "unit"]), [
+  assert.deepEqual(orderedGates(["docker", "lint", "unit", "format"]), [
+    "format",
     "lint",
     "unit",
     "docker",

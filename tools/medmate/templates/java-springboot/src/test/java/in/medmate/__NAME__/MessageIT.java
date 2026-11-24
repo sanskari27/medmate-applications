@@ -13,10 +13,11 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest
 @AutoConfigureMockMvc
 class MessageIT {
-  @Autowired private MockMvc mvc;
+    @Autowired
+    private MockMvc mvc;
 
-  @Test
-  void homeReturnsTheMessage() throws Exception {
-    mvc.perform(get("/")).andExpect(status().isOk()).andExpect(content().string("Hello from __NAME__"));
-  }
+    @Test
+    void homeReturnsTheMessage() throws Exception {
+        mvc.perform(get("/")).andExpect(status().isOk()).andExpect(content().string("Hello from __NAME__"));
+    }
 }

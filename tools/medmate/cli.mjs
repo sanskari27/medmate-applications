@@ -42,7 +42,7 @@ try {
     console.log(`Wrote ${apps.size} env file${apps.size === 1 ? "" : "s"}`);
   } else {
     console.log(`Usage:
-  pnpm medmate add --name <name> --kind <kind> --domain <host> --port <port> --database <true|false> --gates <lint,typecheck,unit,integration,build,docker|none>
+  pnpm medmate add --name <name> --kind <kind> --domain <host> --port <port> --database <true|false> --gates <format,lint,typecheck,unit,integration,build,docker|none>
   pnpm medmate deploy
   pnpm medmate load-env [file]`);
     process.exit(command ? 1 : 0);

@@ -13,5 +13,10 @@
     "plugins": [{ "name": "next" }]
   },
   "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", ".next", "lib/**/*.test.ts", "lib/**/*.integration.test.ts"]
+  "exclude": [
+    "node_modules",
+    ".next",
+    "lib/**/*.test.ts",
+    "lib/**/*.integration.test.ts"
+  ]
 }

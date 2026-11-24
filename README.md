@@ -13,7 +13,7 @@ pnpm medmate add \
   --domain clinic.medmate.in \
   --port 3000 \
   --database true \
-  --gates lint,typecheck,unit,integration,build,docker
+  --gates format,lint,typecheck,unit,integration,build,docker
 ```
 
 `--gates none` turns every gate off. The fields are all required.
@@ -25,7 +25,7 @@ pnpm medmate add \
 | `domain` | Exact hostname to serve. A subdomain is just a hostname. |
 | `port` | Port the process listens on inside the container. |
 | `database` | `true` creates a private Postgres database and grants `medmate_remote` access. |
-| `qualityGates` | Any of `lint`, `typecheck`, `unit`, `integration`, `build`, `docker`, in that order. |
+| `qualityGates` | Any of `format`, `lint`, `typecheck`, `unit`, `integration`, `build`, `docker`, in that order. |
 
 `react` is a Vite single-page app served by its own container. `node-express` is TypeScript. `python-fastapi` is FastAPI. `java-springboot` is Maven and Java 21.
 

@@ -5,6 +5,9 @@ RUN pip install --no-cache-dir -r requirements.txt -r requirements-dev.txt
 COPY . .
 ENV PYTHONPATH=/app
 
+FROM dev AS format
+RUN ruff format --check app tests
+
 FROM dev AS lint
 RUN ruff check app tests
 
