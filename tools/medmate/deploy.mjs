@@ -163,7 +163,7 @@ async function writeCompose(app) {
   ${name}:
     build:
       context: ..
-      dockerfile: ../Dockerfile
+      dockerfile: Dockerfile
       target: runtime
     image: medmate-${name}
     restart: unless-stopped
