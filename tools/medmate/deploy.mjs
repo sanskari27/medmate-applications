@@ -73,9 +73,23 @@ export async function deploy(repoRoot) {
     if (app.config.database) await ensureDatabase(repoRoot, app.config.name);
     await ensureStorage(repoRoot, app.config.name);
     await writeCompose(app);
+    removeLegacyContainer(app.config.name);
+    // Every compose file lives in apps/<app>/.medmate. Without -p, Compose
+    // names that project "medmate" for every app, and --remove-orphans
+    // deletes the other apps.
     execFileSync(
       "docker",
-      ["compose", "-f", composePath(app), "up", "-d", "--build", "--remove-orphans"],
+      [
+        "compose",
+        "-p",
+        app.config.name,
+        "-f",
+        composePath(app),
+        "up",
+        "-d",
+        "--build",
+        "--remove-orphans",
+      ],
       { cwd: repoRoot, stdio: "inherit" },
     );
     await writeCaddySite(app.config);
@@ -135,6 +149,14 @@ async function ensureStorage(repoRoot, name) {
   }
 }
 
+function removeLegacyContainer(name) {
+  try {
+    execFileSync("docker", ["rm", "-f", `medmate-${name}-1`], { stdio: "ignore" });
+  } catch {
+    // The shared Compose project is already gone.
+  }
+}
+
 function composePath(app) {
   return path.join(app.directory, ".medmate", "compose.yaml");
 }
@@ -159,7 +181,8 @@ async function writeCompose(app) {
     : `  web:
     external: true
     name: web`;
-  const yaml = `services:
+  const yaml = `name: ${name}
+services:
   ${name}:
     build:
       context: ..
