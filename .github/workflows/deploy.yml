@@ -25,7 +25,7 @@ jobs:
           chmod 600 ~/.ssh/medmate
           ssh-keyscan -H "${HOST}" >> ~/.ssh/known_hosts
           ssh -i ~/.ssh/medmate -o StrictHostKeyChecking=yes "${USERNAME}@${HOST}" \
-            "cd /home/medmate/medmate-applications && git pull --ff-only && pnpm install --frozen-lockfile"
+            "cd /home/medmate/medmate-applications && git pull --ff-only && CI=true pnpm install --frozen-lockfile"
           printf '%s' "${APP_ENVS}" | ssh -i ~/.ssh/medmate -o StrictHostKeyChecking=yes \
             "${USERNAME}@${HOST}" "cd /home/medmate/medmate-applications && pnpm medmate load-env"
           ssh -i ~/.ssh/medmate -o StrictHostKeyChecking=yes "${USERNAME}@${HOST}" \
