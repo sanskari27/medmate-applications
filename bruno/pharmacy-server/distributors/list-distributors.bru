@@ -1,0 +1,34 @@
+meta {
+  name: List distributors
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/pharmacy/distributors
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.body.distributors).to.be.an("array");
+    if (res.body.distributors.length > 0) {
+      expect(res.body.distributors[0]).to.not.have.property("transactions");
+    }
+  });
+}
+
+docs {
+  An approved owner, or staff with distributors:read, lists this pharmacy's distributors. Outstanding stays on each row. The ledger is a separate payments request.
+}

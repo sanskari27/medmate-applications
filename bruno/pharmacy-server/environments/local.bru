@@ -1,0 +1,42 @@
+vars {
+  @description('API origin for local Java')
+  baseUrl: http://127.0.0.1:8080
+  @description('Example pharmacy id for later CRM requests')
+  examplePharmacyId: b47c8268-4d3a-4dee-93f7-befbbf937702
+  @description('Example phone number for later CRM requests')
+  examplePhone: 9876543210
+  @description('Example X-Request-Id')
+  exampleRequestId: req-example-002
+  @description('Local SMS mock. Start make sms-mock on port 8090.')
+  smsMockUrl: http://127.0.0.1:8090
+  @description('Bearer token for POST /auth/admin-bootstrap')
+  adminBootstrapToken: local-bootstrap
+  @description('4-digit PIN for an approved pharmacy owner')
+  pin: 1234
+  @description('Filled by Verify OTP, PIN login, and refresh')
+  accessToken: eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3OTQ0NDA2MjAsInN1YiI6IjA4ZDk0NDUyLTRmOWEtNDY3MC1iNjEwLTI3ZTY1YWZjMDg1MiIsImlhdCI6MTc5NDQzOTcyMH0.WhTVh1y_g8dq0SbSRzZOFaS2-gm7IsUsFmnmC9Exkvw
+  refreshToken: 41fe6b408e0cfb16a1976151e73451f9174f61f1a10e61f8508c5eff884cbda4
+  accessTokenExpiresAt: 1794440620979
+  otpCode: 855442
+  accountId: 08d94452-4f9a-4670-b610-27e65afc0852
+  @description('Replaced when a pharmacy account signs in')
+  pharmacyId: b47c8268-4d3a-4dee-93f7-befbbf937702
+  @description('Replaced when platform staff are created')
+  platformStaffId: 00000000-0000-4000-8000-000000000001
+  @description('Replaced when pharmacy staff are created')
+  pharmacyStaffId: 00000000-0000-4000-8000-000000000001
+  @description('Open block request returned by Request block')
+  blockRequestId: 00000000-0000-4000-8000-000000000002
+  @description('Seeded FAQ id')
+  exampleSupportFaqId: 00000000-0000-4000-8000-000000000101
+  @description('Filled by Create ticket')
+  supportCaseId: 64e98707-fb99-4867-b95b-c466f89b36d6
+  @description('Filled by Create employee')
+  employeeCode: EMP-001
+  @description('Filled by Create distributor')
+  distributorCode: DST-001
+  @description('Filled by Create doctor')
+  doctorId: 00000000-0000-4000-8000-000000000301
+  @description('Filled by Create department')
+  departmentId: 00000000-0000-4000-8000-000000000302
+}

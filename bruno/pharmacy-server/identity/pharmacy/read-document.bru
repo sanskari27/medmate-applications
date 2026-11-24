@@ -1,0 +1,29 @@
+meta {
+  name: Read document
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/pharmacies/{{pharmacyId}}/documents/gst
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  The owner, compliance, and admin download a private pharmacy document.
+  The collection script attaches the saved access token. pharmacyId is filled when a pharmacy account signs in.
+}

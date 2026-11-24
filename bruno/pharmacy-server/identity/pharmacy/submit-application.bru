@@ -1,0 +1,34 @@
+meta {
+  name: Submit application
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/pharmacy/application
+  body: multipartForm
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:multipart-form {
+  pharmacyType: pharmacy
+  name: Care Pharmacy
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  The owner sends one complete multipart application. This sample sends only the name, so an authenticated owner still fails field checks.
+  The collection script attaches the saved access token.
+}

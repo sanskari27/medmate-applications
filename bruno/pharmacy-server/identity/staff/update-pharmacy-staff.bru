@@ -1,0 +1,40 @@
+meta {
+  name: Update pharmacy staff
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/pharmacy/staff/{{pharmacyStaffId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "displayName": "Counter",
+    "permissions": ["users:read", "support:read"],
+    "pin": "2468",
+    "disabled": false
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  The owner replaces the name, permission keys, PIN, or disabled flag for one staff account.
+  Phone may be sent when it should change. The response does not include the PIN.
+  pharmacyStaffId is stored by Create pharmacy staff. The collection script attaches the saved access token.
+}

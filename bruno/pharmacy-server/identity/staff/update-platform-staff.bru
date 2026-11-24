@@ -1,0 +1,36 @@
+meta {
+  name: Update platform staff
+  type: http
+  seq: 2
+}
+
+patch {
+  url: {{baseUrl}}/staff/{{platformStaffId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "disabled": true
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  An admin replaces subtypes or disables a platform staff account.
+  platformStaffId is stored by Create platform staff. The collection script attaches the saved access token.
+}

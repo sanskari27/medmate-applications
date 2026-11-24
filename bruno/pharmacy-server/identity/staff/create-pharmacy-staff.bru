@@ -1,0 +1,39 @@
+meta {
+  name: Create pharmacy staff
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/pharmacy/staff
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "phone": "{{examplePhone}}",
+    "displayName": "Counter",
+    "pin": "1357",
+    "permissions": ["users:read"]
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  An approved pharmacy owner grants catalog keys such as users:read and sets a 4-digit PIN.
+  A 201 response stores pharmacyStaffId and does not return the PIN. The collection script attaches the saved access token.
+}

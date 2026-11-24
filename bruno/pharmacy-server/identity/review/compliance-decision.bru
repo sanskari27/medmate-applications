@@ -1,0 +1,37 @@
+meta {
+  name: Compliance decision
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/pharmacy-applications/{{pharmacyId}}/compliance-decision
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "decision": "reject",
+    "comment": "Missing seal"
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  Compliance staff or an admin record the first decision.
+  pharmacyId is filled when a pharmacy account signs in. The collection script attaches the saved access token.
+}

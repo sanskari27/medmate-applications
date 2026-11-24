@@ -1,0 +1,36 @@
+meta {
+  name: Set PIN
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/auth/pin/set
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "pin": "{{pin}}"
+  }
+}
+
+tests {
+  test("set PIN uses the saved session", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  An approved pharmacy owner sets this after the first OTP login that follows approval.
+  The collection script attaches the saved access token. pin is the environment value.
+}

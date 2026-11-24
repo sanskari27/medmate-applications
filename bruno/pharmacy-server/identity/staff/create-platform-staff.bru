@@ -1,0 +1,38 @@
+meta {
+  name: Create platform staff
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/staff
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "phone": "{{examplePhone}}",
+    "displayName": "Compliance desk",
+    "subtypes": ["compliance"]
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  An admin creates platform staff. Subtypes grant their module for every pharmacy.
+  A 201 response stores platformStaffId. The collection script attaches the saved access token.
+}

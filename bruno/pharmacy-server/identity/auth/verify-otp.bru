@@ -1,0 +1,36 @@
+meta {
+  name: Verify OTP
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/auth/otp/verify
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "phone": "{{examplePhone}}",
+    "accountType": "pharmacy",
+    "purpose": "login",
+    "code": "{{otpCode}}"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.accessToken: isString
+  res.body.refreshToken: isString
+}
+
+docs {
+  Sends the otpCode stored by Send OTP. Run Send OTP first, with `make sms-mock` running.
+}

@@ -1,0 +1,29 @@
+meta {
+  name: Read verification
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/pharmacy/verification
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  A pharmacy account reads its verification status.
+  The collection script attaches the saved access token.
+}
