@@ -1,0 +1,30 @@
+{
+  "name": "admin",
+  "projectType": "application",
+  "targets": {
+    "format": {
+      "command": "docker build --target format -t medmate-admin-format .",
+      "options": { "cwd": "apps/admin" }
+    },
+    "lint": {
+      "command": "docker build --target lint -t medmate-admin-lint .",
+      "options": { "cwd": "apps/admin" }
+    },
+    "typecheck": {
+      "command": "docker build --target typecheck -t medmate-admin-typecheck .",
+      "options": { "cwd": "apps/admin" }
+    },
+    "unit": {
+      "command": "docker build --target unit -t medmate-admin-unit .",
+      "options": { "cwd": "apps/admin" }
+    },
+    "build": {
+      "command": "docker build --target build -t medmate-admin-build .",
+      "options": { "cwd": "apps/admin" }
+    },
+    "docker": {
+      "command": "docker build --target runtime -t medmate-admin .",
+      "options": { "cwd": "apps/admin" }
+    }
+  }
+}

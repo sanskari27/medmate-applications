@@ -1,0 +1,8 @@
+{
+  "name": "admin",
+  "kind": "react",
+  "domain": "admin.medmate.in",
+  "port": 3205,
+  "database": false,
+  "qualityGates": ["format", "lint", "typecheck", "unit", "build", "docker"]
+}
