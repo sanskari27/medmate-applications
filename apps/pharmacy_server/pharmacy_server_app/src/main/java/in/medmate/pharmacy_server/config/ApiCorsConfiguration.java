@@ -19,6 +19,8 @@ public class ApiCorsConfiguration {
                 "https://*.medmatepharmacy.com",
                 "https://medmatepharmacy.com",
                 "https://www.medmatepharmacy.com",
+                "https://*.medmate.in",
+                "https://medmate.in",
                 "http://localhost:*",
                 "http://127.0.0.1:*"));
         cors.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));

@@ -1,0 +1,30 @@
+{
+  "name": "partnerconsole",
+  "projectType": "application",
+  "targets": {
+    "format": {
+      "command": "docker build --target format -t medmate-partnerconsole-format .",
+      "options": { "cwd": "apps/partnerconsole" }
+    },
+    "lint": {
+      "command": "docker build --target lint -t medmate-partnerconsole-lint .",
+      "options": { "cwd": "apps/partnerconsole" }
+    },
+    "typecheck": {
+      "command": "docker build --target typecheck -t medmate-partnerconsole-typecheck .",
+      "options": { "cwd": "apps/partnerconsole" }
+    },
+    "unit": {
+      "command": "docker build --target unit -t medmate-partnerconsole-unit .",
+      "options": { "cwd": "apps/partnerconsole" }
+    },
+    "build": {
+      "command": "docker build --target build -t medmate-partnerconsole-build .",
+      "options": { "cwd": "apps/partnerconsole" }
+    },
+    "docker": {
+      "command": "docker build --target runtime -t medmate-partnerconsole .",
+      "options": { "cwd": "apps/partnerconsole" }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "partnerconsole",
+  "kind": "react",
+  "domain": "partnerconsole.medmate.in",
+  "port": 3204,
+  "database": false,
+  "qualityGates": ["format", "lint", "typecheck", "unit", "build", "docker"]
+}

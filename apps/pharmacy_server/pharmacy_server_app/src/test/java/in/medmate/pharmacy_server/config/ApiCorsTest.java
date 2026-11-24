@@ -34,6 +34,17 @@ class ApiCorsTest {
     }
 
     @Test
+    void allowsThePartnerConsolePreflight() throws Exception {
+        mvc.perform(options("/auth/otp/send")
+                        .header("Origin", "https://partnerconsole.medmate.in")
+                        .header("Access-Control-Request-Method", "POST")
+                        .header("Access-Control-Request-Headers", "content-type"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "https://partnerconsole.medmate.in"))
+                .andExpect(header().string("Access-Control-Allow-Methods", containsString("POST")));
+    }
+
+    @Test
     void allowsThePharmacySite() throws Exception {
         mvc.perform(options("/api/v1/leads")
                         .header("Origin", "https://medmatepharmacy.com")
