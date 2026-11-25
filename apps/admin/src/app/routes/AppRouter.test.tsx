@@ -182,6 +182,7 @@ describe("AppRouter", () => {
       "Leads",
       "Manage Catalog",
       "Prepare Inventory",
+      "Users",
     ]);
     const sections = [
       ...(nav as HTMLElement).querySelectorAll("[data-slot=nav-section-label]"),
@@ -360,6 +361,32 @@ describe("AppRouter", () => {
     expect(await screen.findByText("Pharmacy fleet")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Support" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Leads" })).toBeNull();
+  });
+
+  it("sends staff away from Users", async () => {
+    const finance: Session = {
+      ...session,
+      account: account({ accountType: "staff", subtypes: ["finance"] }),
+    };
+    sessionStorage.setItem(
+      SESSION_STORAGE_KEY,
+      JSON.stringify({ session: finance, pinReset: false, portalChoice: "finance" }),
+    );
+    renderAt("/users");
+    expect(await screen.findByText("Pharmacy fleet")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Users" })).toBeNull();
+  });
+
+  it("opens Users for an admin", async () => {
+    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ session, pinReset: false }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => json([])),
+    );
+    renderAt("/users");
+    expect(await screen.findByRole("button", { name: "Add user" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Users" })).toBeTruthy();
+    expect(await screen.findByText("No staff yet.")).toBeTruthy();
   });
 
   it("sends finance staff away from Leads", async () => {

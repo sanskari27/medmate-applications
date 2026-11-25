@@ -6,6 +6,7 @@ import {
   PinSetupPage,
   accountRoleLabel,
   canManageCatalog,
+  canManageUsers,
   canPrepareInventory,
   canReview,
   canSupport,
@@ -19,6 +20,7 @@ import { PharmacyDetailPage } from "@/features/pharmacies";
 import { PrepListPage, PrepSheetPage } from "@/features/prep";
 import { ReviewDetailPage, ReviewsPage } from "@/features/reviews";
 import { SupportCasePage, SupportPage } from "@/features/support";
+import { UsersPage } from "@/features/users";
 import { GuestRoute, PinRoute, ProtectedRoute } from "./ProtectedRoute";
 import { navRoutes } from "./routeConfig";
 
@@ -33,6 +35,7 @@ export function AppRouter() {
   const support = canSupport(session?.account);
   const catalog = canManageCatalog(session?.account);
   const prepare = canPrepareInventory(session?.account);
+  const users = canManageUsers(session?.account);
   const roleLabel = session ? accountRoleLabel(session.account) : "";
   const storedName = session?.account.displayName?.trim() ?? "";
   const displayName = storedName || roleLabel;
@@ -66,7 +69,8 @@ export function AppRouter() {
                 route.path !== "/support" &&
                 route.path !== "/leads" &&
                 route.path !== "/catalog" &&
-                route.path !== "/inventory-prep",
+                route.path !== "/inventory-prep" &&
+                route.path !== "/users",
             )
             .map((route) => (
               <Route key={route.path} path={route.path} element={route.element} />
@@ -130,6 +134,10 @@ export function AppRouter() {
           <Route
             path="/inventory-prep/:listId"
             element={prepare ? <PrepSheetPage /> : <Navigate to="/dashboard" replace />}
+          />
+          <Route
+            path="/users"
+            element={users ? <UsersPage /> : <Navigate to="/dashboard" replace />}
           />
           <Route path="/pharmacies/:pharmacyId" element={<PharmacyDetailPage />} />
         </Route>

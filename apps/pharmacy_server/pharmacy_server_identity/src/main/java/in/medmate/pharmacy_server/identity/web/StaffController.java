@@ -23,6 +23,11 @@ public class StaffController {
         this.staff = staff;
     }
 
+    @GetMapping("/staff")
+    public List<StaffService.StaffResponse> listPlatform(Authentication authentication) {
+        return staff.listPlatform(Current.require(authentication));
+    }
+
     @PostMapping("/staff")
     @ResponseStatus(HttpStatus.CREATED)
     public StaffService.StaffResponse createPlatform(Authentication authentication, @RequestBody StaffRequest request) {

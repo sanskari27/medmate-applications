@@ -95,6 +95,19 @@ public class StaffService {
     }
 
     @Transactional(readOnly = true)
+    public List<StaffResponse> listPlatform(AccountPrincipal actor) {
+        requireAdmin(actor);
+        List<StaffResponse> staff = new ArrayList<>();
+        for (UUID id : accounts.staffIds()) {
+            AccountPrincipal member = directory.load(id);
+            if (member != null && member.accountType() == AccountType.STAFF) {
+                staff.add(StaffResponse.from(member));
+            }
+        }
+        return staff;
+    }
+
+    @Transactional(readOnly = true)
     public List<StaffResponse> listPharmacy(AccountPrincipal actor) {
         requireApprovedOwner(actor);
         List<StaffResponse> staff = new ArrayList<>();

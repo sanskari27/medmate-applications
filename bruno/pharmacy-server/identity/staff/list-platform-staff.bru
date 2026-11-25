@@ -1,0 +1,29 @@
+meta {
+  name: List platform staff
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/staff
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  An admin lists platform staff. Admin accounts are not rows.
+  Each row has subtypes and disabled. The collection script attaches the saved access token.
+}

@@ -7,6 +7,7 @@ export {
   accountRoleLabel,
   canHandleSupportCases,
   canManageCatalog,
+  canManageUsers,
   canPrepareInventory,
   canReview,
   canSupport,

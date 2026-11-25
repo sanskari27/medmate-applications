@@ -8,10 +8,12 @@ import {
   IconReceipt,
   IconRx,
   IconStore,
+  IconUsers,
 } from "@/components/ui/Icon";
 import type { Account } from "@/types";
 import {
   canManageCatalog,
+  canManageUsers,
   canPrepareInventory,
   canReview,
   canSupport,
@@ -23,6 +25,7 @@ import { LeadsPage } from "@/features/leads";
 import { PharmaciesPage } from "@/features/pharmacies";
 import { ReviewsPage } from "@/features/reviews";
 import { SupportPage } from "@/features/support";
+import { UsersPage } from "@/features/users";
 
 export type AppRoute = NavEntry & { element: ReactNode };
 
@@ -87,6 +90,14 @@ export const appRoutes: AppRoute[] = [
     icon: <IconReceipt size={19} />,
     element: <PrepListPage />,
   },
+  {
+    path: "/users",
+    label: "Users",
+    title: "Users",
+    sub: "Platform staff",
+    icon: <IconUsers size={19} />,
+    element: <UsersPage />,
+  },
 ];
 
 export function navRoutes(account: Account | null | undefined): AppRoute[] {
@@ -95,6 +106,7 @@ export function navRoutes(account: Account | null | undefined): AppRoute[] {
     if (route.path === "/support" || route.path === "/leads") return canSupport(account);
     if (route.path === "/catalog") return canManageCatalog(account);
     if (route.path === "/inventory-prep") return canPrepareInventory(account);
+    if (route.path === "/users") return canManageUsers(account);
     return true;
   });
 }

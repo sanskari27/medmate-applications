@@ -38,6 +38,10 @@ export function canPrepareInventory(account: Account | null | undefined): boolea
   return account.accountType === "admin" || account.subtypes.includes("sales");
 }
 
+export function canManageUsers(account: Account | null | undefined): boolean {
+  return account?.accountType === "admin";
+}
+
 export function canUseAdminPortal(account: Account): boolean {
   if (account.accountType === "admin") return true;
   return (

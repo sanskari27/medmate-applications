@@ -67,6 +67,13 @@ public class IdentityStore {
                 .list();
     }
 
+    public List<UUID> staffIds() {
+        return jdbc.sql("SELECT id FROM account WHERE account_type = :type ORDER BY display_name, phone")
+                .param("type", AccountType.STAFF.wire())
+                .query((rs, row) -> rs.getObject("id", UUID.class))
+                .list();
+    }
+
     public void insertAccount(UUID id, String phone, AccountType type, String displayName, Instant now) {
         jdbc.sql(
                         "INSERT INTO account (id, phone, account_type, display_name, disabled, created_at) VALUES (:id, :phone, :type, :name, FALSE, :created)")

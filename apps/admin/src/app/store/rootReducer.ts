@@ -6,6 +6,7 @@ import { pharmaciesApi } from "@/features/pharmacies";
 import { prepApi } from "@/features/prep";
 import { reviewsApi } from "@/features/reviews";
 import { supportApi } from "@/features/support";
+import { usersApi } from "@/features/users";
 
 export const rootReducer = combineReducers({
   auth: authReducer,
@@ -16,4 +17,5 @@ export const rootReducer = combineReducers({
   [leadsApi.reducerPath]: leadsApi.reducer,
   [catalogApi.reducerPath]: catalogApi.reducer,
   [prepApi.reducerPath]: prepApi.reducer,
+  [usersApi.reducerPath]: usersApi.reducer,
 });

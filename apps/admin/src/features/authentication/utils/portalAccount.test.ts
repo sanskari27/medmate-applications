@@ -4,6 +4,7 @@ import {
   accountRoleLabel,
   canHandleSupportCases,
   canManageCatalog,
+  canManageUsers,
   canPrepareInventory,
   canReview,
   canSupport,
@@ -67,5 +68,9 @@ describe("portal access", () => {
     expect(canPrepareInventory(account("staff", ["support", "sales"]))).toBe(true);
     expect(canPrepareInventory(account("staff", ["support"]))).toBe(false);
     expect(canPrepareInventory(account("staff", ["finance"]))).toBe(false);
+    expect(canManageUsers(account("admin"))).toBe(true);
+    expect(canManageUsers(account("staff", ["compliance"]))).toBe(false);
+    expect(canManageUsers(account("staff", ["finance", "sales", "support"]))).toBe(false);
+    expect(canManageUsers(account("pharmacy"))).toBe(false);
   });
 });

@@ -206,6 +206,58 @@ class IdentityFlowIT {
     }
 
     @Test
+    void anAdminListsPlatformStaff() {
+        bootstrap("9811111160");
+        String adminToken = token(verify("9811111160", "admin", "login"));
+        ResponseEntity<JsonNode> ada = rest.exchange(
+                "/staff",
+                HttpMethod.POST,
+                new HttpEntity<>(
+                        java.util.Map.of("phone", "9811111161", "displayName", "Ada", "subtypes", List.of("support")),
+                        bearer(adminToken, MediaType.APPLICATION_JSON)),
+                JsonNode.class);
+        assertThat(ada.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        ResponseEntity<JsonNode> disabled = rest.exchange(
+                "/staff/" + ada.getBody().get("id").asText(),
+                HttpMethod.PATCH,
+                new HttpEntity<>(java.util.Map.of("disabled", true), bearer(adminToken, MediaType.APPLICATION_JSON)),
+                JsonNode.class);
+        assertThat(disabled.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        ResponseEntity<JsonNode> nia = rest.exchange(
+                "/staff",
+                HttpMethod.POST,
+                new HttpEntity<>(
+                        java.util.Map.of("phone", "9811111162", "displayName", "Nia", "subtypes", List.of("finance")),
+                        bearer(adminToken, MediaType.APPLICATION_JSON)),
+                JsonNode.class);
+        assertThat(nia.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+        ResponseEntity<JsonNode> listed = rest.exchange(
+                "/staff",
+                HttpMethod.GET,
+                new HttpEntity<>(bearer(adminToken, MediaType.APPLICATION_JSON)),
+                JsonNode.class);
+        assertThat(listed.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(listed.getBody()).hasSize(2);
+        assertThat(listed.getBody().get(0).get("displayName").asText()).isEqualTo("Ada");
+        assertThat(listed.getBody().get(0).get("disabled").asBoolean()).isTrue();
+        assertThat(listed.getBody().get(0).get("phone").asText()).isEqualTo("+919811111161");
+        assertThat(listed.getBody().get(1).get("displayName").asText()).isEqualTo("Nia");
+        assertThat(listed.getBody().get(1).get("accountType").asText()).isEqualTo("staff");
+        assertThat(listed.getBody().findValuesAsText("phone")).doesNotContain("+919811111160");
+
+        String staffToken = token(verify("9811111162", "staff", "login"));
+        ResponseEntity<JsonNode> denied = rest.exchange(
+                "/staff",
+                HttpMethod.GET,
+                new HttpEntity<>(bearer(staffToken, MediaType.APPLICATION_JSON)),
+                JsonNode.class);
+        assertThat(denied.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(denied.getBody().get("detail").asText()).isEqualTo("Only an admin can manage platform staff");
+    }
+
+    @Test
     void anIncompleteSubmissionDoesNotAdvance() {
         String token = token(verify("9811111102", "pharmacy", "signup"));
         ResponseEntity<JsonNode> rejected = rest.exchange(
