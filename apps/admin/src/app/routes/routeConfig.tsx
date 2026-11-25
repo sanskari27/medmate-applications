@@ -92,9 +92,10 @@ export const appRoutes: AppRoute[] = [
   },
   {
     path: "/users",
-    label: "Users",
-    title: "Users",
+    label: "Manage Staffs",
+    title: "Manage Staffs",
     sub: "Platform staff",
+    group: "Staff management",
     icon: <IconUsers size={19} />,
     element: <UsersPage />,
   },

@@ -182,12 +182,12 @@ describe("AppRouter", () => {
       "Leads",
       "Manage Catalog",
       "Prepare Inventory",
-      "Users",
+      "Manage Staffs",
     ]);
     const sections = [
       ...(nav as HTMLElement).querySelectorAll("[data-slot=nav-section-label]"),
     ].map((label) => label.textContent);
-    expect(sections).toEqual(["Pharmacies", "Support", "Leads", "Catalog"]);
+    expect(sections).toEqual(["Pharmacies", "Support", "Leads", "Catalog", "Staff management"]);
     expect(screen.getByText("Ada")).toBeTruthy();
     expect(screen.getByText("Platform admin")).toBeTruthy();
     expect(screen.getByText("Namma")).toBeTruthy();
@@ -374,7 +374,7 @@ describe("AppRouter", () => {
     );
     renderAt("/users");
     expect(await screen.findByText("Pharmacy fleet")).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Users" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Manage Staffs" })).toBeNull();
   });
 
   it("opens Users for an admin", async () => {
@@ -385,7 +385,8 @@ describe("AppRouter", () => {
     );
     renderAt("/users");
     expect(await screen.findByRole("button", { name: "Add user" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Users" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Manage Staffs" })).toBeTruthy();
+    expect(screen.getByText("Staff management")).toBeTruthy();
     expect(await screen.findByText("No staff yet.")).toBeTruthy();
   });
 
