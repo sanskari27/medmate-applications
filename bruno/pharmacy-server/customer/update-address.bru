@@ -1,0 +1,48 @@
+meta {
+  name: Update address
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/customer/addresses/{{customerAddressId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "landmark": "Near the park",
+    "dontRingBell": true
+  }
+}
+
+tests {
+  test("the owner updates the address", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    if (res.getStatus() === 403) {
+      expect(res.body.detail).to.equal("This action is not allowed.");
+      return;
+    }
+    if (!bru.getEnvVar("customerAddressId")) {
+      expect(res.getStatus()).to.be.oneOf([400, 404]);
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.body.address.landmark).to.equal("Near the park");
+    expect(res.body.address.dontRingBell).to.equal(true);
+  });
+}
+
+docs {
+  Omitted fields stay as they are. Another account's address is not found.
+}

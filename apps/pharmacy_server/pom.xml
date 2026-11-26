@@ -37,6 +37,7 @@
     <module>pharmacy_server_doctors</module>
     <module>pharmacy_server_oversight</module>
     <module>pharmacy_server_prep</module>
+    <module>pharmacy_server_customer</module>
     <module>pharmacy_server_app</module>
   </modules>
 

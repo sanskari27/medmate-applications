@@ -1,0 +1,39 @@
+meta {
+  name: Select address
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/v1/customer/addresses/{{customerAddressId}}/select
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("the owner marks this address as delivering here", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    if (res.getStatus() === 403) {
+      expect(res.body.detail).to.equal("This action is not allowed.");
+      return;
+    }
+    if (!bru.getEnvVar("customerAddressId")) {
+      expect(res.getStatus()).to.be.oneOf([400, 404]);
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.body.address.selected).to.equal(true);
+  });
+}
+
+docs {
+  Clears the previous selected address for the same customer.
+}
