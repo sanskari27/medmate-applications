@@ -33,6 +33,7 @@ class AddressRulesTest {
         assertThat(AddressRules.prepareCreate(body).problem())
                 .isEqualTo("We deliver across Bengaluru (pincodes starting 560)");
         body.put("pincode", "560011");
+        assertThat(AddressRules.prepareCreate(body).problem()).isEqualTo("Pin the delivery spot on the map");
         body.put("latitude", 12.93);
         assertThat(AddressRules.prepareCreate(body).problem()).isEqualTo("A pin needs both latitude and longitude");
         body.put("longitude", 200);
@@ -64,8 +65,8 @@ class AddressRulesTest {
         assertThat(values.landmark()).isNull();
         assertThat(values.city()).isEqualTo("Bengaluru");
         assertThat(values.pincode()).isEqualTo("560011");
-        assertThat(values.latitude()).isNull();
-        assertThat(values.longitude()).isNull();
+        assertThat(values.latitude()).isEqualTo(12.9716);
+        assertThat(values.longitude()).isEqualTo(77.5946);
         assertThat(values.receiverName()).isEqualTo("Priya Sharma");
         assertThat(values.receiverPhone()).isEqualTo("+919845012345");
         assertThat(values.callOnArrival()).isFalse();
@@ -79,7 +80,7 @@ class AddressRulesTest {
     }
 
     @Test
-    void updateKeepsOmittedFieldsAndCanClearThePin() {
+    void updateKeepsOmittedFieldsAndRejectsAClearedPin() {
         AddressRules.Values current = new AddressRules.Values(
                 "work",
                 "4th Floor",
@@ -103,19 +104,23 @@ class AddressRulesTest {
 
         ObjectNode clear = json.createObjectNode();
         clear.putNull("landmark");
-        clear.putNull("latitude");
-        clear.putNull("longitude");
         clear.putNull("riderNote");
         clear.put("selected", false);
         AddressRules.Prepared cleared = AddressRules.prepareUpdate(clear, current);
         assertThat(cleared.problem()).isNull();
         assertThat(cleared.values().landmark()).isNull();
-        assertThat(cleared.values().latitude()).isNull();
-        assertThat(cleared.values().longitude()).isNull();
+        assertThat(cleared.values().latitude()).isEqualTo(12.9);
+        assertThat(cleared.values().longitude()).isEqualTo(77.6);
         assertThat(cleared.values().riderNote()).isNull();
         assertThat(cleared.values().selected()).isFalse();
         assertThat(cleared.values().label()).isEqualTo("work");
         assertThat(cleared.values().callOnArrival()).isTrue();
+
+        ObjectNode wipe = json.createObjectNode();
+        wipe.putNull("latitude");
+        wipe.putNull("longitude");
+        assertThat(AddressRules.prepareUpdate(wipe, current).problem())
+                .isEqualTo("Pin the delivery spot on the map");
 
         ObjectNode half = json.createObjectNode();
         half.putNull("latitude");
@@ -130,6 +135,8 @@ class AddressRulesTest {
         body.put("line2", " 7th Cross, Jayanagar 4th Block ");
         body.put("city", " Bengaluru ");
         body.put("pincode", "560 011");
+        body.put("latitude", 12.9716);
+        body.put("longitude", 77.5946);
         body.put("receiverName", " Priya Sharma ");
         body.put("receiverPhone", "98450 12345");
         return body;

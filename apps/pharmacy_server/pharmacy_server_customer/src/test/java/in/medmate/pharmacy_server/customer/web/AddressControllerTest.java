@@ -75,6 +75,8 @@ class AddressControllerTest {
                         .content(sheet(true)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.address.city").value("Bengaluru"))
+                .andExpect(jsonPath("$.address.latitude").value(12.9716))
+                .andExpect(jsonPath("$.address.longitude").value(77.5946))
                 .andExpect(jsonPath("$.address.selected").value(true));
         verify(store).clearSelected(CUSTOMER);
         verify(store).insert(any(), eq(CUSTOMER), any(), eq(NOW));
@@ -119,7 +121,8 @@ class AddressControllerTest {
     private static String sheet(boolean selected) {
         return """
                 {"label":"home","line1":"Flat 302, Sri Sai Residency","line2":"7th Cross, Jayanagar 4th Block",
-                "city":"Bengaluru","pincode":"560011","receiverName":"Priya Sharma","receiverPhone":"9845012345",
+                "city":"Bengaluru","pincode":"560011","latitude":12.9716,"longitude":77.5946,
+                "receiverName":"Priya Sharma","receiverPhone":"9845012345",
                 "selected":%s}
                 """
                 .formatted(selected);
@@ -134,8 +137,8 @@ class AddressControllerTest {
                 "Near Cool Joint",
                 "Bengaluru",
                 "560011",
-                12.93,
-                77.58,
+                12.9716,
+                77.5946,
                 "Priya Sharma",
                 "+919845012345",
                 true,

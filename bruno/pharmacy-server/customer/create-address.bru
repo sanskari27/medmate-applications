@@ -24,6 +24,8 @@ body:json {
     "landmark": "Near Cool Joint",
     "city": "Bengaluru",
     "pincode": "560011",
+    "latitude": 12.9716,
+    "longitude": 77.5946,
     "receiverName": "Priya Sharma",
     "receiverPhone": "9845012345",
     "callOnArrival": true,
@@ -46,6 +48,8 @@ tests {
     if (res.getStatus() === 201) {
       expect(res.body.address.label).to.equal("home");
       expect(res.body.address.pincode).to.equal("560011");
+      expect(res.body.address.latitude).to.equal(12.9716);
+      expect(res.body.address.longitude).to.equal(77.5946);
       expect(res.body.address.receiverPhone).to.equal("+919845012345");
       expect(res.body.address.selected).to.equal(true);
       bru.setEnvVar("customerAddressId", res.body.address.id);
@@ -54,5 +58,5 @@ tests {
 }
 
 docs {
-  Pincodes must start with 560. At most one selected address, and at most ten saved addresses.
+  Pincodes must start with 560. Latitude and longitude are required. At most one selected address, and at most ten saved addresses.
 }

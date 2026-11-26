@@ -218,12 +218,25 @@ public final class AddressRules {
         if (longitudeProblem != null) {
             return longitudeProblem;
         }
+        if (cleared(body, "latitude") != cleared(body, "longitude")) {
+            return "A pin needs both latitude and longitude";
+        }
+        if (cleared(body, "latitude")) {
+            return "Pin the delivery spot on the map";
+        }
         Double latitude = latitude(body, current);
         Double longitude = longitude(body, current);
         if ((latitude == null) != (longitude == null)) {
             return "A pin needs both latitude and longitude";
         }
+        if (latitude == null) {
+            return "Pin the delivery spot on the map";
+        }
         return null;
+    }
+
+    private static boolean cleared(JsonNode body, String field) {
+        return body.has(field) && body.get(field).isNull();
     }
 
     private static String numberProblem(JsonNode body, String field, double min, double max, String name) {
