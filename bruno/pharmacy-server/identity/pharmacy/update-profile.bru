@@ -19,6 +19,7 @@ body:multipart-form {
   name: Care Pharmacy
   tagline: Open early
   extraDetails: []
+  openingHours: [{"day":"monday","closed":false,"opensAt":"09:00","closesAt":"21:00"},{"day":"tuesday","closed":false,"opensAt":"09:00","closesAt":"21:00"},{"day":"wednesday","closed":false,"opensAt":"09:00","closesAt":"21:00"},{"day":"thursday","closed":false,"opensAt":"09:00","closesAt":"21:00"},{"day":"friday","closed":false,"opensAt":"09:00","closesAt":"21:00"},{"day":"saturday","closed":false,"opensAt":"09:00","closesAt":"21:00"},{"day":"sunday","closed":true}]
 }
 
 tests {
@@ -30,7 +31,8 @@ tests {
 }
 
 docs {
-  An approved owner updates the pharmacy profile. This sample sends only a name, tagline, and empty extra details, so an authenticated owner still fails the required field checks.
-  A licence or pharmacist change moves the pharmacy to pending_compliance. Terms and a signature file on this call are ignored.
+  An approved owner updates the pharmacy profile. This sample sends a name, tagline, empty extra details, and a week of opening hours, so an authenticated owner still fails the required field checks.
+  openingHours is a JSON list of seven days. Each day is closed, or has opensAt before closesAt as HH:mm. Omit it to leave stored hours unchanged.
+  A licence or pharmacist change moves the pharmacy to pending_compliance. Changing hours does not. Terms and a signature file on this call are ignored.
   The collection script attaches the saved access token.
 }

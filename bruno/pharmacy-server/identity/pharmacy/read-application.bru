@@ -26,6 +26,7 @@ tests {
     expect(body.status).to.be.a("string");
     expect(body).to.have.property("pharmacyType");
     expect(body.documents).to.be.an("array");
+    expect(body.openingHours).to.be.an("array");
     body.documents.forEach(function(document) {
       expect(document.slot).to.be.a("string");
       expect(document.contentType).to.be.a("string");
@@ -36,6 +37,7 @@ tests {
 }
 
 docs {
-  The pharmacy owner reads the stored application, including pharmacyType and document slots.
+  The pharmacy owner reads the stored application, including pharmacyType, document slots, and openingHours.
+  openingHours is empty until the pharmacy saves a week.
   The collection script attaches the saved access token.
 }

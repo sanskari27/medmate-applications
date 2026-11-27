@@ -87,9 +87,14 @@ public class PharmacyStore {
             Instant submittedAt,
             Instant createdAt,
             List<PharmacyRules.ExtraDetail> extraDetails,
+            List<PharmacyRules.OpeningHour> openingHours,
             List<StoredDocument> documents) {
 
         ApplicationRow withDocuments(List<StoredDocument> documents) {
+            return withHours(openingHours).copyDocuments(documents);
+        }
+
+        ApplicationRow withHours(List<PharmacyRules.OpeningHour> openingHours) {
             return new ApplicationRow(
                     id,
                     status,
@@ -127,6 +132,49 @@ public class PharmacyStore {
                     submittedAt,
                     createdAt,
                     extraDetails,
+                    openingHours,
+                    documents);
+        }
+
+        private ApplicationRow copyDocuments(List<StoredDocument> documents) {
+            return new ApplicationRow(
+                    id,
+                    status,
+                    rejectionStage,
+                    rejectionComment,
+                    phone,
+                    name,
+                    tagline,
+                    email,
+                    address,
+                    city,
+                    state,
+                    pincode,
+                    latitude,
+                    longitude,
+                    businessTypes,
+                    industry,
+                    registrationType,
+                    pharmacyType,
+                    gstin,
+                    pan,
+                    drugLicenceNo,
+                    fssaiNo,
+                    tradeLicenceNo,
+                    enableTds,
+                    enableTcs,
+                    pharmacistName,
+                    invoicePrefix,
+                    terms,
+                    acceptOnlineOrders,
+                    selfOrderKiosk,
+                    eInvoicing,
+                    looseSelling,
+                    lowStockAlerts,
+                    submittedAt,
+                    createdAt,
+                    extraDetails,
+                    openingHours,
                     documents);
         }
     }
@@ -195,7 +243,7 @@ public class PharmacyStore {
                 .param("id", id)
                 .query(this::readApplication)
                 .optional();
-        return found.map(row -> row.withDocuments(documentSlots(id)));
+        return found.map(row -> row.withDocuments(documentSlots(id)).withHours(openingHours(id)));
     }
 
     public Optional<UUID> membership(UUID accountId) {
@@ -290,6 +338,7 @@ public class PharmacyStore {
                 .param("loose", Boolean.TRUE.equals(input.looseSelling()))
                 .param("submitted", Timestamp.from(now))
                 .update();
+        replaceOpeningHours(id, input.openingHours());
     }
 
     public void saveProfile(UUID id, PharmacyRules.ProfileInput input, Instant submittedAt) {
@@ -344,6 +393,7 @@ public class PharmacyStore {
                 .param("pharmacist", input.pharmacistName().trim())
                 .param("extra", extraDetails(input.extraDetails()))
                 .update();
+        replaceOpeningHours(id, input.openingHours());
         if (submittedAt != null) {
             jdbc.sql("UPDATE pharmacy SET submitted_at = :submitted WHERE id = :id")
                     .param("id", id)
@@ -680,7 +730,48 @@ public class PharmacyStore {
                 submitted == null ? null : submitted.toInstant(),
                 rs.getTimestamp("created_at").toInstant(),
                 readExtra(rs.getString("extra_details")),
+                List.of(),
                 List.of());
+    }
+
+    private List<PharmacyRules.OpeningHour> openingHours(UUID pharmacyId) {
+        return jdbc.sql(
+                        """
+                        SELECT day, closed, opens_at, closes_at
+                        FROM pharmacy_hours
+                        WHERE pharmacy_id = :id
+                        ORDER BY array_position(
+                          ARRAY['monday','tuesday','wednesday','thursday','friday','saturday','sunday'], day)
+                        """)
+                .param("id", pharmacyId)
+                .query((rs, row) -> new PharmacyRules.OpeningHour(
+                        rs.getString("day"),
+                        rs.getBoolean("closed"),
+                        rs.getString("opens_at"),
+                        rs.getString("closes_at")))
+                .list();
+    }
+
+    private void replaceOpeningHours(UUID pharmacyId, List<PharmacyRules.OpeningHour> hours) {
+        if (hours == null) {
+            return;
+        }
+        jdbc.sql("DELETE FROM pharmacy_hours WHERE pharmacy_id = :id")
+                .param("id", pharmacyId)
+                .update();
+        for (PharmacyRules.OpeningHour hour : hours) {
+            jdbc.sql(
+                            """
+                            INSERT INTO pharmacy_hours (pharmacy_id, day, closed, opens_at, closes_at)
+                            VALUES (:id, :day, :closed, :opens, :closes)
+                            """)
+                    .param("id", pharmacyId)
+                    .param("day", hour.day())
+                    .param("closed", hour.closed())
+                    .param("opens", hour.opensAt())
+                    .param("closes", hour.closesAt())
+                    .update();
+        }
     }
 
     private static List<PharmacyRules.ExtraDetail> readExtra(String json) {

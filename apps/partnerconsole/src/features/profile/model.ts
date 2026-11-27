@@ -1,3 +1,10 @@
+import {
+  closedWeek,
+  openingHoursFrom,
+  serializeOpeningHours,
+  type OpeningHour,
+  type OpeningHourWire,
+} from "@/components/OpeningHours";
 import type { VerificationStatus } from "@/types";
 
 export const DOCUMENT_SLOTS = [
@@ -66,6 +73,7 @@ export type ProfileApplication = {
   pharmacistName: string | null;
   terms: string | null;
   extraDetails?: ExtraDetail[];
+  openingHours?: OpeningHourWire[];
   documents: ProfileDocument[];
 };
 
@@ -93,6 +101,8 @@ export type ProfileForm = {
   eInvoicing: boolean;
   pharmacistName: string;
   extraDetails: ExtraDetail[];
+  openingHours: OpeningHour[];
+  includeOpeningHours: boolean;
   removeLogo: boolean;
   files: Partial<Record<DocumentSlot, File | undefined>>;
 };
@@ -109,6 +119,7 @@ function text(value: string | null | undefined) {
 }
 
 export function formFromApplication(application: ProfileApplication): ProfileForm {
+  const openingHours = openingHoursFrom(application.openingHours);
   return {
     name: text(application.name),
     tagline: text(application.tagline),
@@ -133,6 +144,8 @@ export function formFromApplication(application: ProfileApplication): ProfileFor
     eInvoicing: application.eInvoicing,
     pharmacistName: text(application.pharmacistName),
     extraDetails: (application.extraDetails ?? []).map((detail) => ({ ...detail })),
+    openingHours: openingHours ?? closedWeek(),
+    includeOpeningHours: openingHours != null,
     removeLogo: false,
     files: {},
   };
@@ -192,6 +205,9 @@ export function toFormData(draft: ProfileForm): FormData {
         .filter((detail) => detail.label && detail.value),
     ),
   );
+  if (draft.includeOpeningHours) {
+    body.set("openingHours", JSON.stringify(serializeOpeningHours(draft.openingHours)));
+  }
   body.set("removeLogo", String(draft.removeLogo && !(draft.files.logo instanceof File)));
   for (const slot of DOCUMENT_SLOTS) {
     if (slot === "signature") continue;
@@ -225,6 +241,8 @@ function snapshot(form: ProfileForm) {
     eInvoicing: form.eInvoicing,
     pharmacistName: form.pharmacistName,
     extraDetails: form.extraDetails,
+    openingHours: form.openingHours,
+    includeOpeningHours: form.includeOpeningHours,
   };
 }
 

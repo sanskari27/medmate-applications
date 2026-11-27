@@ -950,8 +950,17 @@ class IdentityFlowIT {
         assertThat(after.get("name").asText()).isEqualTo("Care Pharmacy East");
         assertThat(after.get("tagline").asText()).isEqualTo("Open early");
         assertThat(after.get("eInvoicing").asBoolean()).isTrue();
+        assertThat(before.get("openingHours").size()).isZero();
         assertThat(after.get("extraDetails").get(0).get("label").asText()).isEqualTo("Website");
         assertThat(after.get("extraDetails").get(0).get("value").asText()).isEqualTo("care.example");
+        assertThat(after.get("openingHours").size()).isEqualTo(7);
+        assertThat(after.get("openingHours").get(0).get("day").asText()).isEqualTo("monday");
+        assertThat(after.get("openingHours").get(0).get("closed").asBoolean()).isFalse();
+        assertThat(after.get("openingHours").get(0).get("opensAt").asText()).isEqualTo("09:00");
+        assertThat(after.get("openingHours").get(0).get("closesAt").asText()).isEqualTo("21:00");
+        assertThat(after.get("openingHours").get(6).get("day").asText()).isEqualTo("sunday");
+        assertThat(after.get("openingHours").get(6).get("closed").asBoolean()).isTrue();
+        assertThat(after.get("openingHours").get(6).get("opensAt").isNull()).isTrue();
         assertThat(after.get("invoicePrefix").asText()).isEqualTo("CARE");
         assertThat(after.get("acceptOnlineOrders").asBoolean()).isTrue();
         assertThat(after.get("submittedAt").asText()).isEqualTo(submittedAt);
@@ -1005,6 +1014,7 @@ class IdentityFlowIT {
         assertThat(locked.getBody().get("status").asText()).isEqualTo("pending_compliance");
         JsonNode pending = ownerApplication(ownerToken).getBody();
         assertThat(pending.get("gstin").asText()).isEqualTo("29ABCDE1234F2Z5");
+        assertThat(pending.get("openingHours").get(6).get("closed").asBoolean()).isTrue();
         assertThat(contentType(pending, "gst")).isEqualTo("application/pdf");
         assertThat(contentType(pending, "pan")).isEqualTo("application/pdf");
         assertThat(pending.get("invoicePrefix").asText()).isEqualTo("CARE");
@@ -1295,6 +1305,15 @@ class IdentityFlowIT {
         body.add("enableTcs", "false");
         body.add("eInvoicing", "true");
         body.add("extraDetails", "[{\"label\":\"Website\",\"value\":\"care.example\"}]");
+        body.add(
+                "openingHours",
+                "[{\"day\":\"monday\",\"closed\":false,\"opensAt\":\"09:00\",\"closesAt\":\"21:00\"},"
+                        + "{\"day\":\"tuesday\",\"closed\":false,\"opensAt\":\"09:00\",\"closesAt\":\"21:00\"},"
+                        + "{\"day\":\"wednesday\",\"closed\":false,\"opensAt\":\"09:00\",\"closesAt\":\"21:00\"},"
+                        + "{\"day\":\"thursday\",\"closed\":false,\"opensAt\":\"09:00\",\"closesAt\":\"21:00\"},"
+                        + "{\"day\":\"friday\",\"closed\":false,\"opensAt\":\"09:00\",\"closesAt\":\"21:00\"},"
+                        + "{\"day\":\"saturday\",\"closed\":false,\"opensAt\":\"09:00\",\"closesAt\":\"21:00\"},"
+                        + "{\"day\":\"sunday\",\"closed\":true}]");
         return body;
     }
 

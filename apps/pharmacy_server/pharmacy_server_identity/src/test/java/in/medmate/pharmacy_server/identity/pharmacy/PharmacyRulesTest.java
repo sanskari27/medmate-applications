@@ -2,6 +2,7 @@ package in.medmate.pharmacy_server.identity.pharmacy;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -82,6 +83,32 @@ class PharmacyRulesTest {
     }
 
     @Test
+    void openingHoursCoverEachDayOnceAndKeepAClosedDayClear() {
+        assertThat(PharmacyRules.hoursProblem(week())).isNull();
+        assertThat(PharmacyRules.readOpeningHours(null).hours()).isNull();
+        assertThat(PharmacyRules.readOpeningHours("  ").hours()).isNull();
+        assertThat(PharmacyRules.readOpeningHours("[]").problem()).isEqualTo("Opening hours must cover each day once");
+        assertThat(PharmacyRules.readOpeningHours("{").problem()).isEqualTo("Opening hours are not valid.");
+
+        List<PharmacyRules.OpeningHour> duplicate = new ArrayList<>(week());
+        duplicate.set(1, duplicate.get(0));
+        assertThat(PharmacyRules.hoursProblem(duplicate)).isEqualTo("Opening hours must cover each day once");
+
+        List<PharmacyRules.OpeningHour> reversed = new ArrayList<>(week());
+        reversed.set(0, new PharmacyRules.OpeningHour("monday", false, "21:00", "09:00"));
+        assertThat(PharmacyRules.hoursProblem(reversed)).isEqualTo("Open time must be before close time");
+
+        List<PharmacyRules.OpeningHour> closed = new ArrayList<>(week());
+        closed.set(6, new PharmacyRules.OpeningHour("sunday", true, "09:00", "21:00"));
+        assertThat(PharmacyRules.hoursProblem(closed)).isEqualTo("A closed day has no opening times");
+
+        PharmacyRules.ProfileInput saved = profileWithHours(week());
+        assertThat(PharmacyRules.profileInvalid(saved, "+919876543210", storedSlots(), preserved()))
+                .isNull();
+        assertThat(PharmacyRules.needsReview(stored(), saved)).isFalse();
+    }
+
+    @Test
     void acceptsInvoiceSettingsAndRejectsABadTemplateAccentTitleOrMissingSignature() {
         assertThat(PharmacyRules.invoiceInvalid(invoice(), true)).isNull();
         assertThat(PharmacyRules.invoiceInvalid(invoiceWithTemplate("slip"), true))
@@ -147,7 +174,55 @@ class PharmacyRulesTest {
                 "Goods once sold",
                 null,
                 null,
-                List.of());
+                List.of(),
+                null);
+    }
+
+    private static List<PharmacyRules.OpeningHour> week() {
+        List<PharmacyRules.OpeningHour> hours = new ArrayList<>();
+        for (String day : List.of("monday", "tuesday", "wednesday", "thursday", "friday", "saturday")) {
+            hours.add(new PharmacyRules.OpeningHour(day, false, "09:00", "21:00"));
+        }
+        hours.add(new PharmacyRules.OpeningHour("sunday", true, null, null));
+        return hours;
+    }
+
+    private static PharmacyRules.ProfileInput profileWithHours(List<PharmacyRules.OpeningHour> hours) {
+        PharmacyRules.ProfileInput input = profile();
+        return new PharmacyRules.ProfileInput(
+                input.name(),
+                input.tagline(),
+                input.email(),
+                input.address(),
+                input.city(),
+                input.state(),
+                input.pincode(),
+                input.latitude(),
+                input.longitude(),
+                input.businessTypes(),
+                input.industry(),
+                input.registrationType(),
+                input.gstin(),
+                input.gst(),
+                input.pan(),
+                input.panCard(),
+                input.drugLicenceNo(),
+                input.drugLicence(),
+                input.fssaiNo(),
+                input.fssai(),
+                input.tradeLicenceNo(),
+                input.tradeLicence(),
+                input.enableTds(),
+                input.enableTcs(),
+                input.eInvoicing(),
+                input.pharmacistName(),
+                input.pharmacistCertificate(),
+                input.signature(),
+                input.terms(),
+                input.logo(),
+                input.submittedPhone(),
+                input.extraDetails(),
+                hours);
     }
 
     private static PharmacyRules.ProfileInput profileWithGstin(String gstin) {
@@ -184,7 +259,8 @@ class PharmacyRulesTest {
                 input.terms(),
                 input.logo(),
                 input.submittedPhone(),
-                input.extraDetails());
+                input.extraDetails(),
+                input.openingHours());
     }
 
     private static PharmacyRules.ProfileInput profileWithPharmacist(String name) {
@@ -221,7 +297,8 @@ class PharmacyRulesTest {
                 input.terms(),
                 input.logo(),
                 input.submittedPhone(),
-                input.extraDetails());
+                input.extraDetails(),
+                input.openingHours());
     }
 
     private static PharmacyRules.ProfileInput profileWithSignature(PharmacyRules.Upload signature) {
@@ -258,7 +335,8 @@ class PharmacyRulesTest {
                 input.terms(),
                 input.logo(),
                 input.submittedPhone(),
-                input.extraDetails());
+                input.extraDetails(),
+                input.openingHours());
     }
 
     private static PharmacyRules.ProfileInput profileWithLogo(PharmacyRules.Upload logo) {
@@ -295,7 +373,8 @@ class PharmacyRulesTest {
                 input.terms(),
                 logo,
                 input.submittedPhone(),
-                input.extraDetails());
+                input.extraDetails(),
+                input.openingHours());
     }
 
     private static PharmacyRules.ApplicationInput sample() {
@@ -338,7 +417,8 @@ class PharmacyRulesTest {
                 true,
                 null,
                 image,
-                "9876543210");
+                "9876543210",
+                null);
     }
 
     private static PharmacyRules.ApplicationInput placed(
@@ -380,7 +460,8 @@ class PharmacyRulesTest {
                 input.looseSelling(),
                 input.lowStockAlerts(),
                 input.logo(),
-                input.submittedPhone());
+                input.submittedPhone(),
+                input.openingHours());
     }
 
     private static PharmacyRules.ApplicationInput copy(
@@ -422,7 +503,8 @@ class PharmacyRulesTest {
                 input.looseSelling(),
                 lowStockAlerts,
                 input.logo(),
-                phone);
+                phone,
+                input.openingHours());
     }
 
     private static PharmacyRules.ApplicationInput typed(PharmacyRules.ApplicationInput input, String pharmacyType) {
@@ -463,7 +545,8 @@ class PharmacyRulesTest {
                 input.looseSelling(),
                 input.lowStockAlerts(),
                 input.logo(),
-                input.submittedPhone());
+                input.submittedPhone(),
+                input.openingHours());
     }
 
     private static PharmacyRules.ApplicationInput withoutGst(PharmacyRules.ApplicationInput input) {
@@ -504,7 +587,8 @@ class PharmacyRulesTest {
                 input.looseSelling(),
                 input.lowStockAlerts(),
                 input.logo(),
-                input.submittedPhone());
+                input.submittedPhone(),
+                input.openingHours());
     }
 
     private static PharmacyRules.InvoiceInput invoice() {

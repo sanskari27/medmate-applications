@@ -1,5 +1,6 @@
 package in.medmate.pharmacy_server.customer.web;
 
+import in.medmate.pharmacy_server.identity.pharmacy.PharmacyRules;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,7 +20,8 @@ public final class NearbyViews {
             double distanceKm,
             boolean acceptOnlineOrders,
             String licenceNumber,
-            String pharmacistName) {}
+            String pharmacistName,
+            List<PharmacyRules.OpeningHour> openingHours) {}
 
     public record ListResponse(List<PharmacyView> pharmacies) {}
 }

@@ -1,3 +1,4 @@
+import { openingHoursFrom, serializeOpeningHours } from "@/components/OpeningHours";
 import type { DocumentSlot, DraftPatch, PharmacyApplication, SetupDraft } from "./types";
 import { DOCUMENT_SLOTS } from "./types";
 
@@ -45,6 +46,7 @@ export function emptyDraft(): SetupDraft {
     selfOrderKiosk: false,
     eInvoicing: false,
     looseSelling: false,
+    openingHours: null,
     files: {},
     stored: [],
   };
@@ -79,6 +81,7 @@ export function draftFromApplication(application: PharmacyApplication): SetupDra
     selfOrderKiosk: application.selfOrderKiosk,
     eInvoicing: application.eInvoicing,
     looseSelling: application.looseSelling,
+    openingHours: openingHoursFrom(application.openingHours),
     files: {},
     stored: application.documents ?? [],
   };
@@ -136,6 +139,9 @@ export function applicationForm(draft: SetupDraft) {
   body.set("selfOrderKiosk", String(draft.selfOrderKiosk));
   body.set("eInvoicing", String(draft.eInvoicing));
   body.set("looseSelling", String(draft.looseSelling));
+  if (draft.openingHours) {
+    body.set("openingHours", JSON.stringify(serializeOpeningHours(draft.openingHours)));
+  }
   for (const slot of DOCUMENT_SLOTS) {
     const file = draft.files[slot];
     if (file) body.set(FILE_PARTS[slot], file);

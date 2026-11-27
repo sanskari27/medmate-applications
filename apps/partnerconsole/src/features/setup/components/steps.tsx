@@ -1,4 +1,5 @@
 import type { ChangeEvent } from "react";
+import { OpeningHoursFields, closedWeek } from "@/components/OpeningHours";
 import { PharmacyPin, addressFromPin } from "@/components/PharmacyPin";
 import { Box } from "@/components/ui/Box";
 import { Field } from "@/components/ui/Field";
@@ -147,6 +148,12 @@ export function BusinessStep({ draft, phone, onChange }: StepProps) {
           </Text>
         </Field>
       </Box>
+      <Stack className="mt-[14px]">
+        <OpeningHoursFields
+          hours={draft.openingHours ?? closedWeek()}
+          onChange={(openingHours) => onChange({ openingHours })}
+        />
+      </Stack>
     </Stack>
   );
 }

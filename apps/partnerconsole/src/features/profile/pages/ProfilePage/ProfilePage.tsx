@@ -5,6 +5,7 @@ import { applicationSubmitted, problemMessage, useAuthState } from "@/features/a
 import { BusinessCard } from "../../components/BusinessCard";
 import { CategoriesCard } from "../../components/CategoriesCard";
 import { ExtraDetailsCard } from "../../components/ExtraDetailsCard";
+import { OpeningHoursCard } from "../../components/OpeningHoursCard/OpeningHoursCard";
 import { SaveBar } from "../../components/SaveBar";
 import { SaveConfirm } from "../../components/SaveConfirm";
 import { TaxCard } from "../../components/TaxCard";
@@ -83,6 +84,7 @@ export function ProfilePage() {
             documents={profile.data?.documents ?? []}
             onChange={patch}
           />
+          <OpeningHoursCard draft={draft} onChange={patch} />
           <CategoriesCard draft={draft} onChange={patch} />
           <ExtraDetailsCard details={draft.extraDetails} onChange={patch} />
         </div>

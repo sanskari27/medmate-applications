@@ -230,6 +230,7 @@ public class ReviewService {
             boolean lowStockAlerts,
             Instant submittedAt,
             List<PharmacyRules.ExtraDetail> extraDetails,
+            List<PharmacyRules.OpeningHour> openingHours,
             List<DocumentItem> documents) {
 
         static ApplicationDetail from(PharmacyStore.ApplicationRow row, DocumentStore documents) {
@@ -268,6 +269,7 @@ public class ReviewService {
                     row.lowStockAlerts(),
                     row.submittedAt(),
                     row.extraDetails(),
+                    row.openingHours(),
                     row.documents().stream()
                             .map(document -> new DocumentItem(
                                     document.slot(), document.contentType(), documents.url(document.objectKey())))

@@ -68,5 +68,28 @@ describe("profile model", () => {
     expect(body.has("logo")).toBe(false);
     expect(body.has("terms")).toBe(false);
     expect(body.has("signature")).toBe(false);
+    expect(body.get("openingHours")).toBeNull();
+  });
+
+  it("sends a week of opening hours after they are edited and does not send them for review", () => {
+    const baseline = saved();
+    expect(baseline.includeOpeningHours).toBe(false);
+    const openingHours = baseline.openingHours.map((hour) =>
+      hour.day === "monday"
+        ? { ...hour, closed: false, opensAt: "09:00", closesAt: "21:00" }
+        : hour,
+    );
+    const next = { ...baseline, openingHours, includeOpeningHours: true };
+    expect(needsReview(baseline, next)).toBe(false);
+    expect(isDirty(baseline, next)).toBe(true);
+    const sent = JSON.parse(String(toFormData(next).get("openingHours"))) as {
+      day: string;
+      closed: boolean;
+      opensAt: string | null;
+      closesAt: string | null;
+    }[];
+    expect(sent).toHaveLength(7);
+    expect(sent[0]).toEqual({ day: "monday", closed: false, opensAt: "09:00", closesAt: "21:00" });
+    expect(sent[6]).toEqual({ day: "sunday", closed: true, opensAt: null, closesAt: null });
   });
 });

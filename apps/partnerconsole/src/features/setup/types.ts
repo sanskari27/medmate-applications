@@ -1,3 +1,4 @@
+import type { OpeningHour, OpeningHourWire } from "@/components/OpeningHours";
 import type { VerificationStatus } from "@/types";
 
 export const DOCUMENT_SLOTS = [
@@ -60,6 +61,7 @@ export type PharmacyApplication = {
   looseSelling: boolean;
   lowStockAlerts: boolean;
   submittedAt: string | null;
+  openingHours?: OpeningHourWire[];
   documents: StoredDocument[];
 };
 
@@ -98,6 +100,7 @@ export type SetupDraft = {
   selfOrderKiosk: boolean;
   eInvoicing: boolean;
   looseSelling: boolean;
+  openingHours: OpeningHour[] | null;
   files: Partial<Record<DocumentSlot, File>>;
   stored: StoredDocument[];
 };

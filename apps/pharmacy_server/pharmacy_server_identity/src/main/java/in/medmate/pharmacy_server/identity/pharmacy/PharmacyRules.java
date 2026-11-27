@@ -4,9 +4,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import in.medmate.pharmacy_server.identity.phone.PhoneNumbers;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public final class PharmacyRules {
 
@@ -77,6 +82,9 @@ public final class PharmacyRules {
     private static final Set<String> IMAGES = Set.of("image/jpeg", "image/png", "image/webp");
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final int EXTRA_LIMIT = 20;
+    private static final Pattern CLOCK_TIME = Pattern.compile("^([01]\\d|2[0-3]):[0-5]\\d$");
+    private static final List<String> DAYS =
+            List.of("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday");
 
     private PharmacyRules() {}
 
@@ -119,11 +127,16 @@ public final class PharmacyRules {
             Boolean looseSelling,
             Boolean lowStockAlerts,
             Upload logo,
-            String submittedPhone) {}
+            String submittedPhone,
+            List<OpeningHour> openingHours) {}
 
     public record ExtraDetail(String label, String value) {}
 
     public record ExtraRead(List<ExtraDetail> details, String problem) {}
+
+    public record OpeningHour(String day, boolean closed, String opensAt, String closesAt) {}
+
+    public record HoursRead(List<OpeningHour> hours, String problem) {}
 
     public record Preserved(
             String pharmacyType,
@@ -172,7 +185,8 @@ public final class PharmacyRules {
             String terms,
             Upload logo,
             String submittedPhone,
-            List<ExtraDetail> extraDetails) {}
+            List<ExtraDetail> extraDetails,
+            List<OpeningHour> openingHours) {}
 
     public static ExtraRead readExtra(String raw) {
         if (raw == null || raw.isBlank()) {
@@ -190,6 +204,60 @@ public final class PharmacyRules {
         } catch (JsonProcessingException exception) {
             return new ExtraRead(List.of(), "Extra details are not valid.");
         }
+    }
+
+    public static HoursRead readOpeningHours(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return new HoursRead(null, null);
+        }
+        final List<OpeningHour> parsed;
+        try {
+            parsed = JSON.readValue(raw, new TypeReference<List<OpeningHour>>() {});
+        } catch (JsonProcessingException exception) {
+            return new HoursRead(List.of(), "Opening hours are not valid.");
+        }
+        if (parsed == null || parsed.stream().anyMatch(item -> item == null)) {
+            return new HoursRead(List.of(), "Opening hours are not valid.");
+        }
+        String problem = hoursProblem(parsed);
+        if (problem != null) {
+            return new HoursRead(List.of(), problem);
+        }
+        return new HoursRead(orderedHours(parsed), null);
+    }
+
+    public static String hoursProblem(List<OpeningHour> hours) {
+        if (hours == null) {
+            return null;
+        }
+        if (hours.size() != DAYS.size()) {
+            return "Opening hours must cover each day once";
+        }
+        Set<String> seen = new LinkedHashSet<>();
+        for (OpeningHour hour : hours) {
+            if (hour.day() == null || !DAYS.contains(hour.day()) || !seen.add(hour.day())) {
+                return "Opening hours must cover each day once";
+            }
+            String open = clock(hour.opensAt());
+            String close = clock(hour.closesAt());
+            if (hour.closed()) {
+                if (open != null || close != null) {
+                    return "A closed day has no opening times";
+                }
+                continue;
+            }
+            if (open == null || close == null) {
+                return "Open and close times are required";
+            }
+            if (!CLOCK_TIME.matcher(open).matches()
+                    || !CLOCK_TIME.matcher(close).matches()) {
+                return "Opening time is not valid";
+            }
+            if (open.compareTo(close) >= 0) {
+                return "Open time must be before close time";
+            }
+        }
+        return null;
     }
 
     public static String profileInvalid(
@@ -395,6 +463,10 @@ public final class PharmacyRules {
         if (Boolean.FALSE.equals(input.lowStockAlerts())) {
             return "Low-stock alerts stay on";
         }
+        String hours = hoursProblem(input.openingHours());
+        if (hours != null) {
+            return hours;
+        }
         return file(input.logo(), "Logo", false, true, stored.contains("logo"));
     }
 
@@ -441,7 +513,33 @@ public final class PharmacyRules {
                 preserved.looseSelling(),
                 null,
                 input.logo(),
-                input.submittedPhone());
+                input.submittedPhone(),
+                input.openingHours());
+    }
+
+    private static List<OpeningHour> orderedHours(List<OpeningHour> hours) {
+        Map<String, OpeningHour> byDay = new HashMap<>();
+        for (OpeningHour hour : hours) {
+            byDay.put(
+                    hour.day(),
+                    new OpeningHour(
+                            hour.day(),
+                            hour.closed(),
+                            hour.closed() ? null : clock(hour.opensAt()),
+                            hour.closed() ? null : clock(hour.closesAt())));
+        }
+        List<OpeningHour> ordered = new ArrayList<>();
+        for (String day : DAYS) {
+            ordered.add(byDay.get(day));
+        }
+        return List.copyOf(ordered);
+    }
+
+    private static String clock(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim();
     }
 
     private static String extraProblem(List<ExtraDetail> details) {

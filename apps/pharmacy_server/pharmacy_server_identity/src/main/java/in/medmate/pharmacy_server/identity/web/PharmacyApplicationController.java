@@ -59,6 +59,7 @@ public class PharmacyApplicationController {
             @RequestParam(required = false) Boolean looseSelling,
             @RequestParam(required = false) Boolean lowStockAlerts,
             @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String openingHours,
             @RequestPart(required = false) MultipartFile logo,
             @RequestPart(required = false) MultipartFile gstCertificate,
             @RequestPart(required = false) MultipartFile panCard,
@@ -68,6 +69,7 @@ public class PharmacyApplicationController {
             @RequestPart(required = false) MultipartFile pharmacistCertificate,
             @RequestPart(required = false) MultipartFile signature)
             throws java.io.IOException {
+        PharmacyRules.HoursRead hours = openingHours(openingHours);
         PharmacyRules.ApplicationInput input = new PharmacyRules.ApplicationInput(
                 name,
                 tagline,
@@ -105,7 +107,8 @@ public class PharmacyApplicationController {
                 looseSelling,
                 lowStockAlerts,
                 upload(logo),
-                phone);
+                phone,
+                hours.hours());
         return applications.submit(Current.require(authentication), input);
     }
 
@@ -137,6 +140,7 @@ public class PharmacyApplicationController {
             @RequestParam(required = false) String terms,
             @RequestParam(required = false) String phone,
             @RequestParam(required = false) String extraDetails,
+            @RequestParam(required = false) String openingHours,
             @RequestParam(required = false, defaultValue = "false") boolean removeLogo,
             @RequestPart(required = false) MultipartFile logo,
             @RequestPart(required = false) MultipartFile gstCertificate,
@@ -151,6 +155,7 @@ public class PharmacyApplicationController {
         if (extra.problem() != null) {
             throw new ApiProblem(HttpStatus.BAD_REQUEST, "Bad request", extra.problem());
         }
+        PharmacyRules.HoursRead hours = openingHours(openingHours);
         PharmacyRules.ProfileInput input = new PharmacyRules.ProfileInput(
                 name,
                 tagline,
@@ -183,7 +188,8 @@ public class PharmacyApplicationController {
                 terms,
                 upload(logo),
                 phone,
-                extra.details());
+                extra.details(),
+                hours.hours());
         return applications.updateProfile(Current.require(authentication), input, removeLogo);
     }
 
@@ -195,6 +201,14 @@ public class PharmacyApplicationController {
     @GetMapping("/pharmacy/verification")
     public PharmacyApplicationService.VerificationResponse verification(Authentication authentication) {
         return applications.verification(Current.require(authentication));
+    }
+
+    private static PharmacyRules.HoursRead openingHours(String raw) {
+        PharmacyRules.HoursRead hours = PharmacyRules.readOpeningHours(raw);
+        if (hours.problem() != null) {
+            throw new ApiProblem(HttpStatus.BAD_REQUEST, "Bad request", hours.problem());
+        }
+        return hours;
     }
 
     private static List<String> split(List<String> values) {

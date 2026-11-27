@@ -16,6 +16,7 @@ import in.medmate.pharmacy_server.identity.access.AccountPrincipal;
 import in.medmate.pharmacy_server.identity.access.AccountType;
 import in.medmate.pharmacy_server.identity.access.PharmacyRole;
 import in.medmate.pharmacy_server.identity.access.VerificationStatus;
+import in.medmate.pharmacy_server.identity.pharmacy.PharmacyRules;
 import in.medmate.pharmacy_server.shared.error.ApiExceptionHandler;
 import java.util.List;
 import java.util.Set;
@@ -61,7 +62,13 @@ class NearbyControllerTest {
     @Test
     void aCustomerReceivesNearestPharmaciesFirst() throws Exception {
         when(store.nearby(12.9716, 77.5946, 20, NearbyRules.MAX_DISTANCE_KM))
-                .thenReturn(List.of(row(NEAR, "Care Pharmacy", 0.4), row(FAR, "Sri Sai Medicals", 3.2)));
+                .thenReturn(List.of(
+                        row(
+                                NEAR,
+                                "Care Pharmacy",
+                                0.4,
+                                List.of(new PharmacyRules.OpeningHour("monday", false, "09:00", "21:00"))),
+                        row(FAR, "Sri Sai Medicals", 3.2, List.of())));
         mvc.perform(get("/api/v1/customer/pharmacies/nearby")
                         .principal(customer())
                         .param("latitude", "12.9716")
@@ -73,6 +80,11 @@ class NearbyControllerTest {
                 .andExpect(jsonPath("$.pharmacies[0].acceptOnlineOrders").value(true))
                 .andExpect(jsonPath("$.pharmacies[0].licenceNumber").value("KA-BLR-20B-12345"))
                 .andExpect(jsonPath("$.pharmacies[0].pharmacistName").value("Asha Rao"))
+                .andExpect(jsonPath("$.pharmacies[0].openingHours[0].day").value("monday"))
+                .andExpect(jsonPath("$.pharmacies[0].openingHours[0].closed").value(false))
+                .andExpect(jsonPath("$.pharmacies[0].openingHours[0].opensAt").value("09:00"))
+                .andExpect(jsonPath("$.pharmacies[0].openingHours[0].closesAt").value("21:00"))
+                .andExpect(jsonPath("$.pharmacies[1].openingHours").isEmpty())
                 .andExpect(jsonPath("$.pharmacies[1].name").value("Sri Sai Medicals"))
                 .andExpect(jsonPath("$.pharmacies[1].distanceKm").value(3.2));
 
@@ -87,7 +99,8 @@ class NearbyControllerTest {
         verify(store).nearby(12.9716, 77.5946, 50, NearbyRules.MAX_DISTANCE_KM);
     }
 
-    private static NearbyStore.NearbyRow row(UUID id, String name, double distanceKm) {
+    private static NearbyStore.NearbyRow row(
+            UUID id, String name, double distanceKm, List<PharmacyRules.OpeningHour> openingHours) {
         return new NearbyStore.NearbyRow(
                 id,
                 name,
@@ -100,7 +113,8 @@ class NearbyControllerTest {
                 distanceKm,
                 true,
                 "KA-BLR-20B-12345",
-                "Asha Rao");
+                "Asha Rao",
+                openingHours);
     }
 
     private static AccountAuthentication customer() {

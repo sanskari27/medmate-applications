@@ -1,6 +1,10 @@
 package in.medmate.pharmacy_server.customer.store;
 
+import in.medmate.pharmacy_server.identity.pharmacy.PharmacyRules;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -28,10 +32,29 @@ public class NearbyStore {
             double distanceKm,
             boolean acceptOnlineOrders,
             String licenceNumber,
-            String pharmacistName) {}
+            String pharmacistName,
+            List<PharmacyRules.OpeningHour> openingHours) {
+
+        NearbyRow withHours(List<PharmacyRules.OpeningHour> openingHours) {
+            return new NearbyRow(
+                    pharmacyId,
+                    name,
+                    address,
+                    city,
+                    state,
+                    pincode,
+                    latitude,
+                    longitude,
+                    distanceKm,
+                    acceptOnlineOrders,
+                    licenceNumber,
+                    pharmacistName,
+                    openingHours);
+        }
+    }
 
     public List<NearbyRow> nearby(double latitude, double longitude, int limit, double maxKm) {
-        return jdbc.sql(
+        List<NearbyRow> rows = jdbc.sql(
                         """
                         SELECT id, name, address, city, state, pincode, latitude, longitude,
                                accept_online_orders, distance_km, drug_licence_no, pharmacist_name
@@ -58,6 +81,36 @@ public class NearbyStore {
                 .param("limit", limit)
                 .query((rs, row) -> nearby(rs))
                 .list();
+        return withHours(rows);
+    }
+
+    private List<NearbyRow> withHours(List<NearbyRow> rows) {
+        if (rows.isEmpty()) {
+            return rows;
+        }
+        Map<UUID, List<PharmacyRules.OpeningHour>> hours = new HashMap<>();
+        jdbc.sql(
+                        """
+                        SELECT pharmacy_id, day, closed, opens_at, closes_at
+                        FROM pharmacy_hours
+                        WHERE pharmacy_id IN (:ids)
+                        ORDER BY pharmacy_id, array_position(
+                          ARRAY['monday','tuesday','wednesday','thursday','friday','saturday','sunday'], day)
+                        """)
+                .param("ids", rows.stream().map(NearbyRow::pharmacyId).toList())
+                .query((rs, row) -> {
+                    hours.computeIfAbsent(rs.getObject("pharmacy_id", UUID.class), id -> new ArrayList<>())
+                            .add(new PharmacyRules.OpeningHour(
+                                    rs.getString("day"),
+                                    rs.getBoolean("closed"),
+                                    rs.getString("opens_at"),
+                                    rs.getString("closes_at")));
+                    return 1;
+                })
+                .list();
+        return rows.stream()
+                .map(row -> row.withHours(hours.getOrDefault(row.pharmacyId(), List.of())))
+                .toList();
     }
 
     public List<NearbyRow> within(double latitude, double longitude, double maxKm) {
@@ -102,6 +155,7 @@ public class NearbyStore {
                 rs.getDouble("distance_km"),
                 rs.getBoolean("accept_online_orders"),
                 rs.getString("drug_licence_no"),
-                rs.getString("pharmacist_name"));
+                rs.getString("pharmacist_name"),
+                List.of());
     }
 }

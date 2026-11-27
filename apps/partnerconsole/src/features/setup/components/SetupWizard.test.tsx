@@ -58,6 +58,7 @@ describe("SetupWizard", () => {
       expect(body.get("name")).toBe("Care Pharmacy");
       expect(body.get("latitude")).toBe("12.9716");
       expect(body.get("longitude")).toBe("77.5946");
+      expect(body.get("openingHours")).toBeNull();
       return null;
     });
     render(
