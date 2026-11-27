@@ -20,6 +20,7 @@ import {
   canReview,
   canSupport,
 } from "@/features/authentication";
+import { AppSectionsPage } from "@/features/appSections";
 import { CatalogPage } from "@/features/catalog";
 import { CouponsPage } from "@/features/coupons";
 import { PrepListPage } from "@/features/prep";
@@ -86,6 +87,15 @@ export const appRoutes: AppRoute[] = [
     element: <CatalogPage />,
   },
   {
+    path: "/app-sections",
+    label: "App sections",
+    title: "App sections",
+    sub: "Mobile categories",
+    group: "Catalog",
+    icon: <IconRx size={19} />,
+    element: <AppSectionsPage />,
+  },
+  {
     path: "/coupons",
     label: "Coupons",
     title: "Coupons",
@@ -117,7 +127,8 @@ export function navRoutes(account: Account | null | undefined): AppRoute[] {
   return appRoutes.filter((route) => {
     if (route.path === "/reviews") return canReview(account);
     if (route.path === "/support" || route.path === "/leads") return canSupport(account);
-    if (route.path === "/catalog") return canManageCatalog(account);
+    if (route.path === "/catalog" || route.path === "/app-sections")
+      return canManageCatalog(account);
     if (route.path === "/coupons") return canManageCoupons(account);
     if (route.path === "/inventory-prep") return canPrepareInventory(account);
     if (route.path === "/users") return canManageUsers(account);

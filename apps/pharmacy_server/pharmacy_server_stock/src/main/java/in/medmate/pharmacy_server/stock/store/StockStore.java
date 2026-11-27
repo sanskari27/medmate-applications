@@ -69,6 +69,19 @@ public class StockStore {
     public record BatchRow(
             String productId, String batchNo, String expiry, int qty, BigDecimal rate, BigDecimal mrp, Integer gst) {}
 
+    public List<String> availableProductIds(String currentMonth) {
+        return jdbc.sql(
+                        """
+                        SELECT DISTINCT product_id
+                        FROM inventory_batch
+                        WHERE qty > 0
+                          AND (expiry = '' OR expiry >= :currentMonth)
+                        """)
+                .param("currentMonth", currentMonth)
+                .query(String.class)
+                .list();
+    }
+
     public boolean lockPharmacy(UUID pharmacyId) {
         return jdbc.sql("SELECT id FROM pharmacy WHERE id = :id FOR UPDATE")
                 .param("id", pharmacyId)

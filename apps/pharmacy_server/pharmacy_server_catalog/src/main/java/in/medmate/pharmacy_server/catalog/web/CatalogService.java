@@ -58,6 +58,11 @@ public class CatalogService {
         return read(() -> store.list(listing));
     }
 
+    public CatalogDocuments.CategoryList categories(AccountPrincipal actor) {
+        require(actor);
+        return new CatalogDocuments.CategoryList(read(store::categories));
+    }
+
     public CatalogDocuments.ProductPage products(String ids) {
         CatalogRules.Ids parsed = CatalogRules.ids(ids);
         if (parsed.problem() != null) {

@@ -71,11 +71,12 @@ export function Sidebar({
         </span>
       </Stack>
       <Stack data-slot="nav" className="min-h-0 flex-1 gap-0.5 overflow-y-auto px-3 py-1.5">
-        {items.map((item) => {
+        {items.map((item, index) => {
           const active = isNavActive(item.path, currentPath);
+          const showGroup = Boolean(item.group) && item.group !== items[index - 1]?.group;
           return (
             <span key={item.path} className="block">
-              {item.group ? (
+              {showGroup ? (
                 <Text
                   as="span"
                   data-slot="nav-section-label"

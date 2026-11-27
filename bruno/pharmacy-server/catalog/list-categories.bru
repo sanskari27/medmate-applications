@@ -1,0 +1,32 @@
+meta {
+  name: List categories
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/catalog/categories
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("a platform admin or sales staff lists catalog categories", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(403);
+      expect(res.body.detail).to.equal("This action is not allowed.");
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.body.categories).to.be.an("array");
+  });
+}
+
+docs {
+  Distinct category labels from drugs and FMCG, for the app-section picker.
+}

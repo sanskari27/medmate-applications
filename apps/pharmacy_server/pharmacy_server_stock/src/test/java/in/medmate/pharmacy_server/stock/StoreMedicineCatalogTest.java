@@ -7,6 +7,7 @@ import in.medmate.pharmacy_server.catalog.CatalogRules;
 import in.medmate.pharmacy_server.catalog.CatalogStore;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class StoreMedicineCatalogTest {
@@ -135,6 +136,22 @@ class StoreMedicineCatalogTest {
         @Override
         public CatalogDocuments.CatalogList list(CatalogRules.Listing listing) {
             throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public CatalogDocuments.AvailablePage available(
+                List<String> productIds, String category, String query, int page, int size) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public List<String> categories() {
+            return List.of();
+        }
+
+        @Override
+        public Optional<String> canonicalCategory(String category) {
+            return Optional.empty();
         }
 
         @Override

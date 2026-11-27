@@ -25,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
@@ -60,6 +61,45 @@ public class JdbcCatalogStore implements CatalogStore {
     private static final Comparator<FmcgSummary> FMCG_ORDER = Comparator.comparing(
                     FmcgSummary::productName, Comparator.nullsLast(String::compareTo))
             .thenComparing(FmcgSummary::productId);
+    private static final char ID_SEPARATOR = '\u001f';
+    private static final String AVAILABLE_FROM =
+            """
+            FROM (
+              SELECT d.product_id,
+                     d.product_name AS name,
+                     d.display_name,
+                     d.mrp AS price,
+                     (SELECT i.url FROM drug_images i
+                      WHERE i.product_id = d.product_id ORDER BY i.position LIMIT 1) AS image,
+                     d.prescription_required AS rx_required
+              FROM drugs d
+              WHERE d.product_id IN (SELECT unnest(string_to_array(:ids, :separator)))
+                AND (CAST(:category AS text) = '' OR EXISTS (
+                      SELECT 1 FROM drug_categories c
+                      WHERE c.product_id = d.product_id
+                        AND lower(c.segment) = lower(CAST(:category AS text))))
+                AND (CAST(:pattern AS text) = ''
+                     OR lower(COALESCE(d.product_name, '')) LIKE CAST(:pattern AS text) ESCAPE '\\'
+                     OR lower(COALESCE(d.display_name, '')) LIKE CAST(:pattern AS text) ESCAPE '\\')
+              UNION ALL
+              SELECT f.product_id,
+                     f.product_name,
+                     f.display_name,
+                     f.mrp,
+                     (SELECT i.url FROM otc_fmcg_images i
+                      WHERE i.product_id = f.product_id ORDER BY i.position LIMIT 1),
+                     FALSE
+              FROM otc_fmcg f
+              WHERE f.product_id IN (SELECT unnest(string_to_array(:ids, :separator)))
+                AND (CAST(:category AS text) = '' OR EXISTS (
+                      SELECT 1 FROM otc_fmcg_categories c
+                      WHERE c.product_id = f.product_id
+                        AND lower(c.segment) = lower(CAST(:category AS text))))
+                AND (CAST(:pattern AS text) = ''
+                     OR lower(COALESCE(f.product_name, '')) LIKE CAST(:pattern AS text) ESCAPE '\\'
+                     OR lower(COALESCE(f.display_name, '')) LIKE CAST(:pattern AS text) ESCAPE '\\')
+            ) cards
+            """;
 
     private final JdbcClient jdbc;
     private final TransactionTemplate transactions;
@@ -124,6 +164,74 @@ public class JdbcCatalogStore implements CatalogStore {
         return new CatalogDocuments.CatalogList(
                 new CatalogDocuments.SummaryPage<>(drugs, listing.page(), listing.size(), await(drugCount)),
                 new CatalogDocuments.SummaryPage<>(fmcg, listing.page(), listing.size(), await(fmcgCount)));
+    }
+
+    @Override
+    public CatalogDocuments.AvailablePage available(
+            List<String> productIds, String category, String query, int page, int size) {
+        if (productIds.isEmpty()) {
+            return new CatalogDocuments.AvailablePage(List.of(), page, size, 0);
+        }
+        String ids = String.join(String.valueOf(ID_SEPARATOR), productIds);
+        String categoryText = category == null ? "" : category;
+        String pattern =
+                query == null || query.isBlank() ? "" : CatalogRules.containsPattern(query.toLowerCase(Locale.ROOT));
+        long total = bound(jdbc.sql("SELECT COUNT(*) " + AVAILABLE_FROM), ids, categoryText, pattern)
+                .query(Long.class)
+                .single();
+        List<CatalogDocuments.AvailableItem> items = bound(
+                        jdbc.sql(
+                                """
+                                SELECT product_id, name, display_name, price, image, rx_required
+                                """
+                                        + AVAILABLE_FROM
+                                        + """
+                                        ORDER BY lower(COALESCE(name, '')), product_id
+                                        LIMIT :limit OFFSET :offset
+                                        """),
+                        ids,
+                        categoryText,
+                        pattern)
+                .param("limit", size)
+                .param("offset", Math.max(0, (page - 1) * size))
+                .query(this::availableItem)
+                .list();
+        return new CatalogDocuments.AvailablePage(items, page, size, Math.toIntExact(total));
+    }
+
+    @Override
+    public List<String> categories() {
+        return jdbc.sql(
+                        """
+                        SELECT MIN(segment) AS segment
+                        FROM (
+                          SELECT segment FROM drug_categories
+                          UNION ALL
+                          SELECT segment FROM otc_fmcg_categories
+                        ) labels
+                        GROUP BY lower(segment)
+                        ORDER BY lower(MIN(segment)), MIN(segment)
+                        """)
+                .query(String.class)
+                .list();
+    }
+
+    @Override
+    public Optional<String> canonicalCategory(String category) {
+        return jdbc.sql(
+                        """
+                        SELECT MIN(segment) AS segment
+                        FROM (
+                          SELECT segment FROM drug_categories
+                          UNION ALL
+                          SELECT segment FROM otc_fmcg_categories
+                        ) labels
+                        WHERE lower(segment) = lower(:category)
+                        GROUP BY lower(segment)
+                        """)
+                .param("category", category)
+                .query(String.class)
+                .optional();
     }
 
     @Override
@@ -1513,6 +1621,23 @@ public class JdbcCatalogStore implements CatalogStore {
                 rs.getString("marketer_name"),
                 rs.getString("marketer_address"),
                 rs.getString("source_file"));
+    }
+
+    private JdbcClient.StatementSpec bound(JdbcClient.StatementSpec spec, String ids, String category, String pattern) {
+        return spec.param("ids", ids)
+                .param("separator", String.valueOf(ID_SEPARATOR))
+                .param("category", category)
+                .param("pattern", pattern);
+    }
+
+    private CatalogDocuments.AvailableItem availableItem(ResultSet row, int number) throws SQLException {
+        return new CatalogDocuments.AvailableItem(
+                row.getString("product_id"),
+                row.getString("name"),
+                row.getString("display_name"),
+                row.getBigDecimal("price"),
+                row.getString("image"),
+                row.getBoolean("rx_required"));
     }
 
     private record DrugParent(

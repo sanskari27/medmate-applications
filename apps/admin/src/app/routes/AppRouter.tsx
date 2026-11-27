@@ -15,6 +15,7 @@ import {
   useAuthActions,
   useAuthState,
 } from "@/features/authentication";
+import { AppSectionsPage } from "@/features/appSections";
 import { CatalogEditorPage, CatalogPage } from "@/features/catalog";
 import { CouponsPage } from "@/features/coupons";
 import { LeadDetailPage, LeadsPage } from "@/features/leads";
@@ -72,6 +73,7 @@ export function AppRouter() {
                 route.path !== "/support" &&
                 route.path !== "/leads" &&
                 route.path !== "/catalog" &&
+                route.path !== "/app-sections" &&
                 route.path !== "/coupons" &&
                 route.path !== "/inventory-prep" &&
                 route.path !== "/users",
@@ -130,6 +132,10 @@ export function AppRouter() {
             element={
               catalog ? <CatalogEditorPage kind="fmcg" /> : <Navigate to="/dashboard" replace />
             }
+          />
+          <Route
+            path="/app-sections"
+            element={catalog ? <AppSectionsPage /> : <Navigate to="/dashboard" replace />}
           />
           <Route
             path="/coupons"

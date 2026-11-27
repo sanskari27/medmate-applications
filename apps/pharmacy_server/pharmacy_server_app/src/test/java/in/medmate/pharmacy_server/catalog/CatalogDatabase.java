@@ -8,13 +8,13 @@ import java.sql.Statement;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.testcontainers.containers.PostgreSQLContainer;
 
-final class CatalogDatabase {
+public final class CatalogDatabase {
 
     static final PostgreSQLContainer<?> POSTGRES = start();
 
     private CatalogDatabase() {}
 
-    static void register(DynamicPropertyRegistry registry) {
+    public static void register(DynamicPropertyRegistry registry) {
         if (POSTGRES != null) {
             ensure(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword(), "medicine_data");
             registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);

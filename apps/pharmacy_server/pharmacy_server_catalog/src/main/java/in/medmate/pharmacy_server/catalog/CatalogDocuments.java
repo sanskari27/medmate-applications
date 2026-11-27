@@ -113,4 +113,11 @@ public final class CatalogDocuments {
     public record SummaryPage<T>(List<T> items, int page, int size, int total) {}
 
     public record CatalogList(SummaryPage<DrugSummary> drug, SummaryPage<FmcgSummary> fmcg) {}
+
+    public record AvailableItem(
+            String productId, String name, String displayName, BigDecimal price, String image, boolean rxRequired) {}
+
+    public record AvailablePage(List<AvailableItem> items, int page, int size, int total) {}
+
+    public record CategoryList(List<String> categories) {}
 }

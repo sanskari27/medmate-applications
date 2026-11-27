@@ -1,0 +1,47 @@
+meta {
+  name: Create app section
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/v1/app-sections
+  body: multipartForm
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:multipart-form {
+  section: {"category":"Pain","position":1}
+  image: @file(../coupons/banner.png)
+}
+
+tests {
+  test("admin and sales can create a category tile", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      expect(res.body.detail).to.equal("Sign in is required");
+      return;
+    }
+    if (res.getStatus() === 403) {
+      expect(res.body.detail).to.equal("This action is not allowed.");
+      return;
+    }
+    if (res.getStatus() === 400) {
+      expect(res.body.detail).to.be.a("string");
+      return;
+    }
+    expect(res.getStatus()).to.equal(201);
+    expect(res.body.section.category).to.be.a("string");
+    expect(res.body.section.image.contentType).to.be.a("string");
+  });
+}
+
+docs {
+  Multipart request. The section part is JSON and the image part is a JPEG, PNG, or WebP up to 2 MB.
+  category must already exist on a drug or FMCG product. One tile per category.
+}

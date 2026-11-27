@@ -1,4 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit";
+import { appSectionsApi } from "@/features/appSections";
 import { authApi } from "@/features/authentication";
 import { catalogApi } from "@/features/catalog";
 import { couponsApi } from "@/features/coupons";
@@ -31,6 +32,7 @@ export function createAppStore() {
         supportApi.middleware,
         leadsApi.middleware,
         catalogApi.middleware,
+        appSectionsApi.middleware,
         couponsApi.middleware,
         prepApi.middleware,
         usersApi.middleware,

@@ -62,6 +62,11 @@ public class CatalogController {
                 size);
     }
 
+    @GetMapping("/api/v1/catalog/categories")
+    public CatalogDocuments.CategoryList categories(Authentication authentication) {
+        return catalog.categories(principal(authentication));
+    }
+
     @GetMapping("/api/products")
     public CatalogDocuments.ProductPage products(@RequestParam(required = false) String ids) {
         return catalog.products(ids);

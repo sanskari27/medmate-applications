@@ -25,6 +25,16 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>in.medmate</groupId>
+      <artifactId>pharmacy_server_catalog</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>in.medmate</groupId>
+      <artifactId>pharmacy_server_stock</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>

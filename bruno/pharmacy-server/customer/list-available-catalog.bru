@@ -1,0 +1,38 @@
+meta {
+  name: List available catalog
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/customer/catalog?category=Pain&q=crocin&page=1&size=25
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("a customer lists in-stock catalog products", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      expect(res.body.detail).to.equal("Sign in is required");
+      return;
+    }
+    if (res.getStatus() === 403) {
+      expect(res.body.detail).to.equal("This action is not allowed.");
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.body.items).to.be.an("array");
+    expect(res.body).to.have.property("total");
+  });
+}
+
+docs {
+  Customer accounts only. A product is included when some pharmacy has a positive, unexpired batch.
+  category and q are optional. Each item has productId, name, displayName, price, image, and rxRequired.
+}

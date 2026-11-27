@@ -181,6 +181,7 @@ describe("AppRouter", () => {
       "Support",
       "Leads",
       "Manage Catalog",
+      "App sections",
       "Coupons",
       "Prepare Inventory",
       "Manage Staffs",
