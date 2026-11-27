@@ -26,16 +26,18 @@ public class NearbyStore {
             double latitude,
             double longitude,
             double distanceKm,
-            boolean acceptOnlineOrders) {}
+            boolean acceptOnlineOrders,
+            String licenceNumber,
+            String pharmacistName) {}
 
     public List<NearbyRow> nearby(double latitude, double longitude, int limit, double maxKm) {
         return jdbc.sql(
                         """
                         SELECT id, name, address, city, state, pincode, latitude, longitude,
-                               accept_online_orders, distance_km
+                               accept_online_orders, distance_km, drug_licence_no, pharmacist_name
                         FROM (
                           SELECT p.id, p.name, p.address, p.city, p.state, p.pincode, p.latitude, p.longitude,
-                            p.accept_online_orders,
+                            p.accept_online_orders, p.drug_licence_no, p.pharmacist_name,
                             (6371 * acos(LEAST(1.0, GREATEST(-1.0,
                               cos(radians(:latitude)) * cos(radians(p.latitude))
                                 * cos(radians(p.longitude) - radians(:longitude))
@@ -62,10 +64,10 @@ public class NearbyStore {
         return jdbc.sql(
                         """
                         SELECT id, name, address, city, state, pincode, latitude, longitude,
-                               accept_online_orders, distance_km
+                               accept_online_orders, distance_km, drug_licence_no, pharmacist_name
                         FROM (
                           SELECT p.id, p.name, p.address, p.city, p.state, p.pincode, p.latitude, p.longitude,
-                            p.accept_online_orders,
+                            p.accept_online_orders, p.drug_licence_no, p.pharmacist_name,
                             (6371 * acos(LEAST(1.0, GREATEST(-1.0,
                               cos(radians(:latitude)) * cos(radians(p.latitude))
                                 * cos(radians(p.longitude) - radians(:longitude))
@@ -98,6 +100,8 @@ public class NearbyStore {
                 rs.getDouble("latitude"),
                 rs.getDouble("longitude"),
                 rs.getDouble("distance_km"),
-                rs.getBoolean("accept_online_orders"));
+                rs.getBoolean("accept_online_orders"),
+                rs.getString("drug_licence_no"),
+                rs.getString("pharmacist_name"));
     }
 }

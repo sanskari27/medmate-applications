@@ -45,7 +45,9 @@ public class NearbyService {
                 row.latitude(),
                 row.longitude(),
                 Math.round(row.distanceKm() * 1000.0) / 1000.0,
-                row.acceptOnlineOrders());
+                row.acceptOnlineOrders(),
+                row.licenceNumber(),
+                row.pharmacistName());
     }
 
     private static void requireCustomer(AccountPrincipal actor) {

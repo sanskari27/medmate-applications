@@ -17,7 +17,9 @@ public final class NearbyViews {
             double latitude,
             double longitude,
             double distanceKm,
-            boolean acceptOnlineOrders) {}
+            boolean acceptOnlineOrders,
+            String licenceNumber,
+            String pharmacistName) {}
 
     public record ListResponse(List<PharmacyView> pharmacies) {}
 }

@@ -71,6 +71,8 @@ class NearbyControllerTest {
                 .andExpect(jsonPath("$.pharmacies[0].name").value("Care Pharmacy"))
                 .andExpect(jsonPath("$.pharmacies[0].distanceKm").value(0.4))
                 .andExpect(jsonPath("$.pharmacies[0].acceptOnlineOrders").value(true))
+                .andExpect(jsonPath("$.pharmacies[0].licenceNumber").value("KA-BLR-20B-12345"))
+                .andExpect(jsonPath("$.pharmacies[0].pharmacistName").value("Asha Rao"))
                 .andExpect(jsonPath("$.pharmacies[1].name").value("Sri Sai Medicals"))
                 .andExpect(jsonPath("$.pharmacies[1].distanceKm").value(3.2));
 
@@ -87,7 +89,18 @@ class NearbyControllerTest {
 
     private static NearbyStore.NearbyRow row(UUID id, String name, double distanceKm) {
         return new NearbyStore.NearbyRow(
-                id, name, "12 Market Road", "Bengaluru", "Karnataka", "560001", 12.9716, 77.5946, distanceKm, true);
+                id,
+                name,
+                "12 Market Road",
+                "Bengaluru",
+                "Karnataka",
+                "560001",
+                12.9716,
+                77.5946,
+                distanceKm,
+                true,
+                "KA-BLR-20B-12345",
+                "Asha Rao");
     }
 
     private static AccountAuthentication customer() {
