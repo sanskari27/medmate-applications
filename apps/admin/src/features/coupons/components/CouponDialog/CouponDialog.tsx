@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { Heading } from "@/components/ui/Heading";
 import { Input } from "@/components/ui/Input";
+import { Label } from "@/components/ui/Label";
 import { Stack } from "@/components/ui/Stack";
 import { Switch } from "@/components/ui/Switch";
 import { Text } from "@/components/ui/Text";
@@ -368,11 +369,18 @@ export function CouponDialog({
               className="h-36 w-full rounded-sm object-cover"
             />
           ) : null}
-          <Switch
-            checked={draft.active}
-            label="Active"
-            onClick={() => patch({ active: !draft.active })}
-          />
+          <Stack direction="row" align="center" justify="between" className="gap-3">
+            <span className="grid gap-0.5">
+              <Label htmlFor="coupon-active">Active</Label>
+              <Text variant="caption">Customers can redeem this coupon while it is on</Text>
+            </span>
+            <Switch
+              id="coupon-active"
+              checked={draft.active}
+              label="Active"
+              onClick={() => patch({ active: !draft.active })}
+            />
+          </Stack>
           {message ? (
             <Text
               id="coupon-dialog-error"
