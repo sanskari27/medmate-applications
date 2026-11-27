@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -16,7 +16,9 @@
         height: 100%;
         margin: 0;
         color: #14281c;
-        font: 14px/1.4 system-ui, sans-serif;
+        font:
+          14px/1.4 system-ui,
+          sans-serif;
       }
       body {
         display: flex;
@@ -79,7 +81,12 @@
   </head>
   <body>
     <form id="search">
-      <input id="query" type="search" placeholder="Search for your pharmacy" aria-label="Search for your pharmacy" />
+      <input
+        id="query"
+        type="search"
+        placeholder="Search for your pharmacy"
+        aria-label="Search for your pharmacy"
+      />
       <button type="submit">Search</button>
       <button id="locate" class="ghost" type="button">Use my location</button>
     </form>
@@ -110,7 +117,10 @@
         shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
       });
 
-      const map = L.map("map", { zoomControl: true, attributionControl: false }).setView(BENGALURU, 12);
+      const map = L.map("map", { zoomControl: true, attributionControl: false }).setView(
+        BENGALURU,
+        12,
+      );
       L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(map);
 
       function schedule(task) {
@@ -154,7 +164,9 @@
 
       function show(latitude, longitude, announce) {
         const unchanged =
-          current && Math.abs(current.lat - latitude) < 1e-7 && Math.abs(current.lng - longitude) < 1e-7;
+          current &&
+          Math.abs(current.lat - latitude) < 1e-7 &&
+          Math.abs(current.lng - longitude) < 1e-7;
         current = { lat: latitude, lng: longitude };
         if (!marker) {
           marker = L.marker([latitude, longitude], { draggable: true }).addTo(map);
@@ -182,7 +194,8 @@
           .then((response) => (response.ok ? response.json() : null))
           .then((body) => {
             if (!body || !current) return;
-            if (Math.abs(current.lat - latitude) > 1e-7 || Math.abs(current.lng - longitude) > 1e-7) return;
+            if (Math.abs(current.lat - latitude) > 1e-7 || Math.abs(current.lng - longitude) > 1e-7)
+              return;
             publish(latitude, longitude, addressFrom(body.address));
           })
           .catch(() => undefined);
