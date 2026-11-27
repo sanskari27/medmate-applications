@@ -140,11 +140,7 @@ class NearbyControllerTest {
     }
 
     private static NearbyStore.NearbyRow row(
-            UUID id,
-            String name,
-            double distanceKm,
-            String logoKey,
-            List<PharmacyRules.OpeningHour> openingHours) {
+            UUID id, String name, double distanceKm, String logoKey, List<PharmacyRules.OpeningHour> openingHours) {
         return new NearbyStore.NearbyRow(
                 id,
                 name,
