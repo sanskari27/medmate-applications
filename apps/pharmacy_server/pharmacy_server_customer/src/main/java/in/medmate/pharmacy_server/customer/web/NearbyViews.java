@@ -24,9 +24,13 @@ public final class NearbyViews {
             List<PharmacyRules.OpeningHour> openingHours,
             boolean closed,
             String closesOn,
-            DeliveryCharge deliveryCharge) {}
+            DeliveryCharge deliveryCharge,
+            Image image,
+            boolean openAllHours) {}
 
     public record DeliveryCharge(String amount, double distanceKm) {}
+
+    public record Image(String url) {}
 
     public record ListResponse(List<PharmacyView> pharmacies) {}
 }

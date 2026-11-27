@@ -33,6 +33,7 @@ public class NearbyStore {
             boolean acceptOnlineOrders,
             String licenceNumber,
             String pharmacistName,
+            String logoKey,
             List<PharmacyRules.OpeningHour> openingHours) {
 
         NearbyRow withHours(List<PharmacyRules.OpeningHour> openingHours) {
@@ -49,6 +50,7 @@ public class NearbyStore {
                     acceptOnlineOrders,
                     licenceNumber,
                     pharmacistName,
+                    logoKey,
                     openingHours);
         }
     }
@@ -57,16 +59,18 @@ public class NearbyStore {
         List<NearbyRow> rows = jdbc.sql(
                         """
                         SELECT id, name, address, city, state, pincode, latitude, longitude,
-                               accept_online_orders, distance_km, drug_licence_no, pharmacist_name
+                               accept_online_orders, distance_km, drug_licence_no, pharmacist_name, logo_key
                         FROM (
                           SELECT p.id, p.name, p.address, p.city, p.state, p.pincode, p.latitude, p.longitude,
-                            p.accept_online_orders, p.drug_licence_no, p.pharmacist_name,
+                            p.accept_online_orders, p.drug_licence_no, p.pharmacist_name, logo.object_key AS logo_key,
                             (6371 * acos(LEAST(1.0, GREATEST(-1.0,
                               cos(radians(:latitude)) * cos(radians(p.latitude))
                                 * cos(radians(p.longitude) - radians(:longitude))
                               + sin(radians(:latitude)) * sin(radians(p.latitude))
                             )))) AS distance_km
                           FROM pharmacy p
+                          LEFT JOIN pharmacy_document logo
+                            ON logo.pharmacy_id = p.id AND logo.slot = 'logo'
                           WHERE p.verification_status = 'approved'
                             AND p.latitude IS NOT NULL
                             AND p.longitude IS NOT NULL
@@ -117,16 +121,18 @@ public class NearbyStore {
         return jdbc.sql(
                         """
                         SELECT id, name, address, city, state, pincode, latitude, longitude,
-                               accept_online_orders, distance_km, drug_licence_no, pharmacist_name
+                               accept_online_orders, distance_km, drug_licence_no, pharmacist_name, logo_key
                         FROM (
                           SELECT p.id, p.name, p.address, p.city, p.state, p.pincode, p.latitude, p.longitude,
-                            p.accept_online_orders, p.drug_licence_no, p.pharmacist_name,
+                            p.accept_online_orders, p.drug_licence_no, p.pharmacist_name, logo.object_key AS logo_key,
                             (6371 * acos(LEAST(1.0, GREATEST(-1.0,
                               cos(radians(:latitude)) * cos(radians(p.latitude))
                                 * cos(radians(p.longitude) - radians(:longitude))
                               + sin(radians(:latitude)) * sin(radians(p.latitude))
                             )))) AS distance_km
                           FROM pharmacy p
+                          LEFT JOIN pharmacy_document logo
+                            ON logo.pharmacy_id = p.id AND logo.slot = 'logo'
                           WHERE p.verification_status = 'approved'
                             AND p.accept_online_orders
                             AND p.latitude IS NOT NULL
@@ -156,6 +162,7 @@ public class NearbyStore {
                 rs.getBoolean("accept_online_orders"),
                 rs.getString("drug_licence_no"),
                 rs.getString("pharmacist_name"),
+                rs.getString("logo_key"),
                 List.of());
     }
 }

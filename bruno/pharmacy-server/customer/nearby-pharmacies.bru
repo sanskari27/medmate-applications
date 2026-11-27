@@ -32,6 +32,10 @@ tests {
       expect(pharmacy.openingHours).to.be.an("array");
       expect(pharmacy.deliveryCharge.amount).to.match(/^\d+\.\d{2}$/);
       expect(pharmacy.deliveryCharge.distanceKm).to.equal(pharmacy.distanceKm);
+      expect(pharmacy.openAllHours).to.be.a("boolean");
+      if (pharmacy.image !== null) {
+        expect(pharmacy.image.url).to.be.a("string").that.is.not.empty;
+      }
       expect(pharmacy.closed).to.be.a("boolean");
       if (pharmacy.closed) {
         expect(pharmacy.closesOn).to.equal(null);
@@ -52,6 +56,8 @@ docs {
   The list is not filtered by whether the pharmacy is open now.
   Each pharmacy includes licenceNumber (drug licence) and pharmacistName.
   Each pharmacy includes deliveryCharge. amount is 0.00 at 3 km or nearer and 20.00 beyond that.
+  image is the pharmacy logo URL, or null when no logo is stored.
+  openAllHours is true when every day is open from 00:00 to 23:59.
   distanceKm on the charge matches the pharmacy distance, rounded to 3 decimals.
   Limit defaults to 20 and caps at 50.
 }

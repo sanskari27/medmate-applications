@@ -6,8 +6,10 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 public final class NearbyRules {
 
@@ -17,6 +19,9 @@ public final class NearbyRules {
     public static final ZoneId ZONE = ZoneId.of("Asia/Kolkata");
 
     private static final HoursNow CLOSED = new HoursNow(true, null);
+    private static final List<String> WEEK =
+            List.of("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday");
+    private static final LocalTime LAST_MINUTE = LocalTime.of(23, 59);
 
     private NearbyRules() {}
 
@@ -48,6 +53,31 @@ public final class NearbyRules {
             }
         }
         return CLOSED;
+    }
+
+    /** Open from midnight through 23:59 on every day of the week. */
+    public static boolean openAllHours(List<PharmacyRules.OpeningHour> hours) {
+        if (hours == null || hours.size() != WEEK.size()) {
+            return false;
+        }
+        Set<String> seen = new HashSet<>();
+        for (PharmacyRules.OpeningHour hour : hours) {
+            if (!allDay(hour, seen)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean allDay(PharmacyRules.OpeningHour hour, Set<String> seen) {
+        if (hour == null || hour.day() == null || hour.closed()) {
+            return false;
+        }
+        String day = hour.day().toLowerCase(Locale.ROOT);
+        if (!WEEK.contains(day) || !seen.add(day)) {
+            return false;
+        }
+        return LocalTime.MIDNIGHT.equals(clock(hour.opensAt())) && LAST_MINUTE.equals(clock(hour.closesAt()));
     }
 
     public static String problem(String latitude, String longitude, String limit) {

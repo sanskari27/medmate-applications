@@ -56,6 +56,36 @@ class NearbyRulesTest {
         assertThat(NearbyRules.today(hours, ist("2026-11-24T12:00"))).isEqualTo(closed);
         assertThat(NearbyRules.today(List.of(), ist("2026-11-23T10:00"))).isEqualTo(closed);
         assertThat(NearbyRules.today(null, ist("2026-11-23T10:00"))).isEqualTo(closed);
+        assertThat(NearbyRules.openAllHours(null)).isFalse();
+        assertThat(NearbyRules.openAllHours(List.of())).isFalse();
+        assertThat(NearbyRules.openAllHours(java.util.Collections.nCopies(7, (PharmacyRules.OpeningHour) null)))
+                .isFalse();
+        assertThat(NearbyRules.openAllHours(week(new PharmacyRules.OpeningHour(null, false, "00:00", "23:59"))))
+                .isFalse();
+        assertThat(NearbyRules.openAllHours(week(new PharmacyRules.OpeningHour("monday", true, "00:00", "23:59"))))
+                .isFalse();
+        assertThat(NearbyRules.openAllHours(week(new PharmacyRules.OpeningHour("holiday", false, "00:00", "23:59"))))
+                .isFalse();
+        assertThat(NearbyRules.openAllHours(java.util.Collections.nCopies(
+                        7, new PharmacyRules.OpeningHour("monday", false, "00:00", "23:59"))))
+                .isFalse();
+        assertThat(NearbyRules.openAllHours(week(new PharmacyRules.OpeningHour("monday", false, "09:00", "23:59"))))
+                .isFalse();
+        assertThat(NearbyRules.openAllHours(week(new PharmacyRules.OpeningHour("monday", false, "00:00", "21:00"))))
+                .isFalse();
+        assertThat(NearbyRules.openAllHours(week(new PharmacyRules.OpeningHour("monday", false, "00:00", "23:59"))))
+                .isTrue();
+    }
+
+    private static List<PharmacyRules.OpeningHour> week(PharmacyRules.OpeningHour monday) {
+        return List.of(
+                monday,
+                new PharmacyRules.OpeningHour("tuesday", false, "00:00", "23:59"),
+                new PharmacyRules.OpeningHour("wednesday", false, "00:00", "23:59"),
+                new PharmacyRules.OpeningHour("thursday", false, "00:00", "23:59"),
+                new PharmacyRules.OpeningHour("friday", false, "00:00", "23:59"),
+                new PharmacyRules.OpeningHour("saturday", false, "00:00", "23:59"),
+                new PharmacyRules.OpeningHour("sunday", false, "00:00", "23:59"));
     }
 
     private static Instant ist(String local) {

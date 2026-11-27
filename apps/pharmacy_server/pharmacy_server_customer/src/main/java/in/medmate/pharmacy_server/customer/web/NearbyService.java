@@ -5,6 +5,7 @@ import in.medmate.pharmacy_server.customer.DeliveryChargePolicy;
 import in.medmate.pharmacy_server.customer.NearbyRules;
 import in.medmate.pharmacy_server.customer.store.NearbyStore;
 import in.medmate.pharmacy_server.identity.access.AccountPrincipal;
+import in.medmate.pharmacy_server.identity.documents.DocumentStore;
 import in.medmate.pharmacy_server.shared.error.ApiProblem;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -20,10 +21,12 @@ import org.springframework.stereotype.Service;
 public class NearbyService {
 
     private final NearbyStore nearby;
+    private final DocumentStore documents;
     private final Clock clock;
 
-    public NearbyService(NearbyStore nearby, Clock clock) {
+    public NearbyService(NearbyStore nearby, DocumentStore documents, Clock clock) {
         this.nearby = nearby;
+        this.documents = documents;
         this.clock = clock;
     }
 
@@ -62,7 +65,16 @@ public class NearbyService {
                 row.openingHours(),
                 today.closed(),
                 today.closesOn(),
-                new NearbyViews.DeliveryCharge(money(charge.amount()), charge.distanceKm()));
+                new NearbyViews.DeliveryCharge(money(charge.amount()), charge.distanceKm()),
+                image(row.logoKey()),
+                NearbyRules.openAllHours(row.openingHours()));
+    }
+
+    private NearbyViews.Image image(String logoKey) {
+        if (logoKey == null) {
+            return null;
+        }
+        return new NearbyViews.Image(documents.url(logoKey));
     }
 
     private static String money(BigDecimal value) {

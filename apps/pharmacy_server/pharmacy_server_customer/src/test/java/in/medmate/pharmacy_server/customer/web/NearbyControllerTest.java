@@ -17,6 +17,7 @@ import in.medmate.pharmacy_server.identity.access.AccountPrincipal;
 import in.medmate.pharmacy_server.identity.access.AccountType;
 import in.medmate.pharmacy_server.identity.access.PharmacyRole;
 import in.medmate.pharmacy_server.identity.access.VerificationStatus;
+import in.medmate.pharmacy_server.identity.documents.DocumentStore;
 import in.medmate.pharmacy_server.identity.pharmacy.PharmacyRules;
 import in.medmate.pharmacy_server.shared.error.ApiExceptionHandler;
 import java.time.Clock;
@@ -39,9 +40,11 @@ class NearbyControllerTest {
     private static final UUID SHUT = UUID.fromString("00000000-0000-4000-8000-0000000000b3");
 
     private final NearbyStore store = Mockito.mock(NearbyStore.class);
+    private final DocumentStore documents = Mockito.mock(DocumentStore.class);
 
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(new NearbyController(new NearbyService(
                     store,
+                    documents,
                     Clock.fixed(
                             LocalDateTime.of(2026, 11, 23, 16, 0)
                                     .atZone(ZoneId.of("Asia/Kolkata"))
@@ -73,20 +76,23 @@ class NearbyControllerTest {
 
     @Test
     void aCustomerReceivesNearestPharmaciesFirst() throws Exception {
+        when(documents.url("logos/care")).thenReturn("https://files.example/care.png");
         when(store.nearby(12.9716, 77.5946, 20, NearbyRules.MAX_DISTANCE_KM))
                 .thenReturn(List.of(
                         row(
                                 NEAR,
                                 "Care Pharmacy",
                                 0.4,
+                                "logos/care",
                                 List.of(
                                         new PharmacyRules.OpeningHour("monday", false, "09:00", "13:00"),
                                         new PharmacyRules.OpeningHour("monday", false, "16:00", "21:00"))),
-                        row(FAR, "Sri Sai Medicals", 3.2, List.of()),
+                        row(FAR, "Sri Sai Medicals", 3.2, null, List.of()),
                         row(
                                 SHUT,
                                 "Morning Medicals",
                                 4.1,
+                                null,
                                 List.of(new PharmacyRules.OpeningHour("monday", false, "09:00", "12:00")))));
         mvc.perform(get("/api/v1/customer/pharmacies/nearby")
                         .principal(customer())
@@ -107,6 +113,10 @@ class NearbyControllerTest {
                 .andExpect(jsonPath("$.pharmacies[0].closesOn").value("21:00"))
                 .andExpect(jsonPath("$.pharmacies[0].deliveryCharge.amount").value("0.00"))
                 .andExpect(jsonPath("$.pharmacies[0].deliveryCharge.distanceKm").value(0.4))
+                .andExpect(jsonPath("$.pharmacies[0].image.url").value("https://files.example/care.png"))
+                .andExpect(jsonPath("$.pharmacies[0].openAllHours").value(false))
+                .andExpect(jsonPath("$.pharmacies[1].image").value(nullValue()))
+                .andExpect(jsonPath("$.pharmacies[1].openAllHours").value(false))
                 .andExpect(jsonPath("$.pharmacies[1].openingHours").isEmpty())
                 .andExpect(jsonPath("$.pharmacies[1].closed").value(true))
                 .andExpect(jsonPath("$.pharmacies[1].closesOn").value(nullValue()))
@@ -130,7 +140,11 @@ class NearbyControllerTest {
     }
 
     private static NearbyStore.NearbyRow row(
-            UUID id, String name, double distanceKm, List<PharmacyRules.OpeningHour> openingHours) {
+            UUID id,
+            String name,
+            double distanceKm,
+            String logoKey,
+            List<PharmacyRules.OpeningHour> openingHours) {
         return new NearbyStore.NearbyRow(
                 id,
                 name,
@@ -144,6 +158,7 @@ class NearbyControllerTest {
                 true,
                 "KA-BLR-20B-12345",
                 "Asha Rao",
+                logoKey,
                 openingHours);
     }
 
