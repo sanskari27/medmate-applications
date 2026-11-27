@@ -30,6 +30,12 @@ tests {
     expect(res.body.pharmacies).to.be.an("array");
     res.body.pharmacies.forEach(function(pharmacy) {
       expect(pharmacy.openingHours).to.be.an("array");
+      expect(pharmacy.closed).to.be.a("boolean");
+      if (pharmacy.closed) {
+        expect(pharmacy.closesOn).to.equal(null);
+      } else {
+        expect(pharmacy.closesOn).to.match(/^\d{2}:\d{2}$/);
+      }
     });
   });
 }
@@ -37,7 +43,11 @@ tests {
 docs {
   Customer accounts only. A pharmacy token is forbidden.
   Approved pharmacies that have a pin and are within 40 km, nearest first.
-  Each pharmacy includes openingHours. An unset week is an empty array. The list is not filtered by whether the pharmacy is open now.
+  Each pharmacy includes openingHours. An unset week is an empty array.
+  Each pharmacy also includes closed and closesOn for the current time in Asia/Kolkata.
+  closed is true when today is marked closed, hours are unset, or the request falls outside today's opening windows.
+  Inside a window, closed is false and closesOn is that window's close time (HH:mm). At the close time the pharmacy is closed.
+  The list is not filtered by whether the pharmacy is open now.
   Each pharmacy includes licenceNumber (drug licence) and pharmacistName.
   Limit defaults to 20 and caps at 50.
 }

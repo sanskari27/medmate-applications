@@ -5,6 +5,8 @@ import in.medmate.pharmacy_server.customer.NearbyRules;
 import in.medmate.pharmacy_server.customer.store.NearbyStore;
 import in.medmate.pharmacy_server.identity.access.AccountPrincipal;
 import in.medmate.pharmacy_server.shared.error.ApiProblem;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.List;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
@@ -15,9 +17,11 @@ import org.springframework.stereotype.Service;
 public class NearbyService {
 
     private final NearbyStore nearby;
+    private final Clock clock;
 
-    public NearbyService(NearbyStore nearby) {
+    public NearbyService(NearbyStore nearby, Clock clock) {
         this.nearby = nearby;
+        this.clock = clock;
     }
 
     public NearbyViews.ListResponse list(AccountPrincipal actor, String latitude, String longitude, String limit) {
@@ -27,14 +31,16 @@ public class NearbyService {
             throw new ApiProblem(HttpStatus.BAD_REQUEST, "Bad request", problem);
         }
         NearbyRules.Query query = NearbyRules.query(latitude, longitude, limit);
+        Instant now = clock.instant();
         List<NearbyViews.PharmacyView> pharmacies =
                 nearby.nearby(query.latitude(), query.longitude(), query.limit(), NearbyRules.MAX_DISTANCE_KM).stream()
-                        .map(NearbyService::view)
+                        .map(row -> view(row, now))
                         .toList();
         return new NearbyViews.ListResponse(pharmacies);
     }
 
-    private static NearbyViews.PharmacyView view(NearbyStore.NearbyRow row) {
+    private static NearbyViews.PharmacyView view(NearbyStore.NearbyRow row, Instant now) {
+        NearbyRules.HoursNow today = NearbyRules.today(row.openingHours(), now);
         return new NearbyViews.PharmacyView(
                 row.pharmacyId(),
                 row.name(),
@@ -48,7 +54,9 @@ public class NearbyService {
                 row.acceptOnlineOrders(),
                 row.licenceNumber(),
                 row.pharmacistName(),
-                row.openingHours());
+                row.openingHours(),
+                today.closed(),
+                today.closesOn());
     }
 
     private static void requireCustomer(AccountPrincipal actor) {

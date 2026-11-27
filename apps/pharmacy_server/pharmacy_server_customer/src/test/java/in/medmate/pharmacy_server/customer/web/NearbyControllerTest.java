@@ -1,5 +1,6 @@
 package in.medmate.pharmacy_server.customer.web;
 
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.never;
@@ -18,6 +19,10 @@ import in.medmate.pharmacy_server.identity.access.PharmacyRole;
 import in.medmate.pharmacy_server.identity.access.VerificationStatus;
 import in.medmate.pharmacy_server.identity.pharmacy.PharmacyRules;
 import in.medmate.pharmacy_server.shared.error.ApiExceptionHandler;
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -31,10 +36,17 @@ class NearbyControllerTest {
     private static final UUID CUSTOMER = UUID.fromString("00000000-0000-4000-8000-0000000000aa");
     private static final UUID NEAR = UUID.fromString("00000000-0000-4000-8000-0000000000b1");
     private static final UUID FAR = UUID.fromString("00000000-0000-4000-8000-0000000000b2");
+    private static final UUID SHUT = UUID.fromString("00000000-0000-4000-8000-0000000000b3");
 
     private final NearbyStore store = Mockito.mock(NearbyStore.class);
 
-    private final MockMvc mvc = MockMvcBuilders.standaloneSetup(new NearbyController(new NearbyService(store)))
+    private final MockMvc mvc = MockMvcBuilders.standaloneSetup(new NearbyController(new NearbyService(
+                    store,
+                    Clock.fixed(
+                            LocalDateTime.of(2026, 11, 23, 16, 0)
+                                    .atZone(ZoneId.of("Asia/Kolkata"))
+                                    .toInstant(),
+                            ZoneOffset.UTC))))
             .setControllerAdvice(new ApiExceptionHandler())
             .build();
 
@@ -67,8 +79,15 @@ class NearbyControllerTest {
                                 NEAR,
                                 "Care Pharmacy",
                                 0.4,
-                                List.of(new PharmacyRules.OpeningHour("monday", false, "09:00", "21:00"))),
-                        row(FAR, "Sri Sai Medicals", 3.2, List.of())));
+                                List.of(
+                                        new PharmacyRules.OpeningHour("monday", false, "09:00", "13:00"),
+                                        new PharmacyRules.OpeningHour("monday", false, "16:00", "21:00"))),
+                        row(FAR, "Sri Sai Medicals", 3.2, List.of()),
+                        row(
+                                SHUT,
+                                "Morning Medicals",
+                                4.1,
+                                List.of(new PharmacyRules.OpeningHour("monday", false, "09:00", "12:00")))));
         mvc.perform(get("/api/v1/customer/pharmacies/nearby")
                         .principal(customer())
                         .param("latitude", "12.9716")
@@ -83,10 +102,17 @@ class NearbyControllerTest {
                 .andExpect(jsonPath("$.pharmacies[0].openingHours[0].day").value("monday"))
                 .andExpect(jsonPath("$.pharmacies[0].openingHours[0].closed").value(false))
                 .andExpect(jsonPath("$.pharmacies[0].openingHours[0].opensAt").value("09:00"))
-                .andExpect(jsonPath("$.pharmacies[0].openingHours[0].closesAt").value("21:00"))
+                .andExpect(jsonPath("$.pharmacies[0].openingHours[0].closesAt").value("13:00"))
+                .andExpect(jsonPath("$.pharmacies[0].closed").value(false))
+                .andExpect(jsonPath("$.pharmacies[0].closesOn").value("21:00"))
                 .andExpect(jsonPath("$.pharmacies[1].openingHours").isEmpty())
+                .andExpect(jsonPath("$.pharmacies[1].closed").value(true))
+                .andExpect(jsonPath("$.pharmacies[1].closesOn").value(nullValue()))
                 .andExpect(jsonPath("$.pharmacies[1].name").value("Sri Sai Medicals"))
-                .andExpect(jsonPath("$.pharmacies[1].distanceKm").value(3.2));
+                .andExpect(jsonPath("$.pharmacies[1].distanceKm").value(3.2))
+                .andExpect(jsonPath("$.pharmacies[2].name").value("Morning Medicals"))
+                .andExpect(jsonPath("$.pharmacies[2].closed").value(true))
+                .andExpect(jsonPath("$.pharmacies[2].closesOn").value(nullValue()));
 
         when(store.nearby(12.9716, 77.5946, 50, NearbyRules.MAX_DISTANCE_KM)).thenReturn(List.of());
         mvc.perform(get("/api/v1/customer/pharmacies/nearby")

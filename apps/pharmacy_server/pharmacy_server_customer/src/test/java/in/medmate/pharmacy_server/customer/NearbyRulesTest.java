@@ -2,6 +2,11 @@ package in.medmate.pharmacy_server.customer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import in.medmate.pharmacy_server.identity.pharmacy.PharmacyRules;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class NearbyRulesTest {
@@ -24,5 +29,36 @@ class NearbyRulesTest {
         assertThat(NearbyRules.problem("91", "77.5946", null)).isEqualTo("Latitude is out of range");
         assertThat(NearbyRules.problem("12.9716", "nope", null)).isEqualTo("Longitude is out of range");
         assertThat(NearbyRules.problem("12.9716", "77.5946", "0")).isEqualTo("Limit is out of range");
+    }
+
+    @Test
+    void closesOnInsideTodaysWindowAndClosedOutsideIt() {
+        List<PharmacyRules.OpeningHour> hours = List.of(
+                new PharmacyRules.OpeningHour("monday", false, "09:00", "13:00"),
+                new PharmacyRules.OpeningHour("monday", false, "16:00", "21:00"),
+                new PharmacyRules.OpeningHour("sunday", true, null, null),
+                new PharmacyRules.OpeningHour("tuesday", false, "21:00", "09:00"));
+        NearbyRules.HoursNow closed = new NearbyRules.HoursNow(true, null);
+
+        assertThat(NearbyRules.today(hours, ist("2026-11-23T08:59"))).isEqualTo(closed);
+        assertThat(NearbyRules.today(hours, ist("2026-11-23T09:00")))
+                .isEqualTo(new NearbyRules.HoursNow(false, "13:00"));
+        assertThat(NearbyRules.today(hours, ist("2026-11-23T12:59")))
+                .isEqualTo(new NearbyRules.HoursNow(false, "13:00"));
+        assertThat(NearbyRules.today(hours, ist("2026-11-23T13:00"))).isEqualTo(closed);
+        assertThat(NearbyRules.today(hours, ist("2026-11-23T15:30"))).isEqualTo(closed);
+        assertThat(NearbyRules.today(hours, ist("2026-11-23T16:00")))
+                .isEqualTo(new NearbyRules.HoursNow(false, "21:00"));
+        assertThat(NearbyRules.today(hours, ist("2026-11-23T20:59")))
+                .isEqualTo(new NearbyRules.HoursNow(false, "21:00"));
+        assertThat(NearbyRules.today(hours, ist("2026-11-23T21:00"))).isEqualTo(closed);
+        assertThat(NearbyRules.today(hours, ist("2026-11-29T12:00"))).isEqualTo(closed);
+        assertThat(NearbyRules.today(hours, ist("2026-11-24T12:00"))).isEqualTo(closed);
+        assertThat(NearbyRules.today(List.of(), ist("2026-11-23T10:00"))).isEqualTo(closed);
+        assertThat(NearbyRules.today(null, ist("2026-11-23T10:00"))).isEqualTo(closed);
+    }
+
+    private static Instant ist(String local) {
+        return LocalDateTime.parse(local).atZone(ZoneId.of("Asia/Kolkata")).toInstant();
     }
 }

@@ -21,7 +21,9 @@ public final class NearbyViews {
             boolean acceptOnlineOrders,
             String licenceNumber,
             String pharmacistName,
-            List<PharmacyRules.OpeningHour> openingHours) {}
+            List<PharmacyRules.OpeningHour> openingHours,
+            boolean closed,
+            String closesOn) {}
 
     public record ListResponse(List<PharmacyView> pharmacies) {}
 }
