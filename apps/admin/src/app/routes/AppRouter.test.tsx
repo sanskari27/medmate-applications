@@ -181,13 +181,21 @@ describe("AppRouter", () => {
       "Support",
       "Leads",
       "Manage Catalog",
+      "Coupons",
       "Prepare Inventory",
       "Manage Staffs",
     ]);
     const sections = [
       ...(nav as HTMLElement).querySelectorAll("[data-slot=nav-section-label]"),
     ].map((label) => label.textContent);
-    expect(sections).toEqual(["Pharmacies", "Support", "Leads", "Catalog", "Staff management"]);
+    expect(sections).toEqual([
+      "Pharmacies",
+      "Support",
+      "Leads",
+      "Catalog",
+      "Coupons",
+      "Staff management",
+    ]);
     expect(screen.getByText("Ada")).toBeTruthy();
     expect(screen.getByText("Platform admin")).toBeTruthy();
     expect(screen.getByText("Namma")).toBeTruthy();
@@ -439,6 +447,38 @@ describe("AppRouter", () => {
     renderAt("/catalog");
     expect(await screen.findByText("Pharmacy fleet")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Manage Catalog" })).toBeNull();
+  });
+
+  it("shows Coupons to sales and sends finance away", async () => {
+    const sales: Session = {
+      ...session,
+      account: account({ accountType: "staff", subtypes: ["sales"] }),
+    };
+    sessionStorage.setItem(
+      SESSION_STORAGE_KEY,
+      JSON.stringify({ session: sales, pinReset: false }),
+    );
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => json({ coupons: [], page: 1, size: 25, total: 0 })),
+    );
+    renderAt("/coupons");
+    expect(await screen.findByRole("button", { name: "Coupons" })).toBeTruthy();
+    expect(await screen.findByText("No coupons yet.")).toBeTruthy();
+    cleanup();
+    sessionStorage.clear();
+
+    const finance: Session = {
+      ...session,
+      account: account({ accountType: "staff", subtypes: ["finance"] }),
+    };
+    sessionStorage.setItem(
+      SESSION_STORAGE_KEY,
+      JSON.stringify({ session: finance, pinReset: false }),
+    );
+    renderAt("/coupons");
+    expect(await screen.findByText("Pharmacy fleet")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Coupons" })).toBeNull();
   });
 
   it("shows Prepare Inventory to sales and sends support away", async () => {

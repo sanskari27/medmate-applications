@@ -178,6 +178,7 @@ public class JdbcCatalogStore implements CatalogStore {
             }
             deleteChildren(
                     draft.productId(),
+                    "drug_categories",
                     "drug_ingredients",
                     "drug_safety",
                     "drug_facts",
@@ -261,6 +262,7 @@ public class JdbcCatalogStore implements CatalogStore {
             return List.of();
         }
         List<String> found = List.copyOf(parents.keySet());
+        Map<String, List<String>> categories = texts(found, "drug_categories", "segment");
         Map<String, List<DrugIngredient>> ingredients = ingredients(found);
         Map<String, List<DrugSafety>> safety = safety(found);
         Map<String, List<DrugFact>> facts = facts(found);
@@ -296,6 +298,7 @@ public class JdbcCatalogStore implements CatalogStore {
                     parent.howItWorks(),
                     parent.countryOfOrigin(),
                     parent.sourceFile(),
+                    categories.getOrDefault(id, List.of()),
                     ingredients.getOrDefault(id, List.of()),
                     safety.getOrDefault(id, List.of()),
                     facts.getOrDefault(id, List.of()),
@@ -505,6 +508,7 @@ public class JdbcCatalogStore implements CatalogStore {
                     .param("value", item.value(), Types.VARCHAR)
                     .update();
         }
+        insertTexts(draft.productId(), "drug_categories", "segment", draft.categories());
         insertTexts(draft.productId(), "drug_uses", "use_text", draft.uses());
         insertTexts(draft.productId(), "drug_side_effects", "effect", draft.sideEffects());
         position = 1;

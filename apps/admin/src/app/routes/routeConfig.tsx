@@ -8,17 +8,20 @@ import {
   IconReceipt,
   IconRx,
   IconStore,
+  IconTag,
   IconUsers,
 } from "@/components/ui/Icon";
 import type { Account } from "@/types";
 import {
   canManageCatalog,
+  canManageCoupons,
   canManageUsers,
   canPrepareInventory,
   canReview,
   canSupport,
 } from "@/features/authentication";
 import { CatalogPage } from "@/features/catalog";
+import { CouponsPage } from "@/features/coupons";
 import { PrepListPage } from "@/features/prep";
 import { DashboardPage } from "@/features/dashboard";
 import { LeadsPage } from "@/features/leads";
@@ -83,6 +86,15 @@ export const appRoutes: AppRoute[] = [
     element: <CatalogPage />,
   },
   {
+    path: "/coupons",
+    label: "Coupons",
+    title: "Coupons",
+    sub: "Customer discounts",
+    group: "Coupons",
+    icon: <IconTag size={19} />,
+    element: <CouponsPage />,
+  },
+  {
     path: "/inventory-prep",
     label: "Prepare Inventory",
     title: "Prepare Inventory",
@@ -106,6 +118,7 @@ export function navRoutes(account: Account | null | undefined): AppRoute[] {
     if (route.path === "/reviews") return canReview(account);
     if (route.path === "/support" || route.path === "/leads") return canSupport(account);
     if (route.path === "/catalog") return canManageCatalog(account);
+    if (route.path === "/coupons") return canManageCoupons(account);
     if (route.path === "/inventory-prep") return canPrepareInventory(account);
     if (route.path === "/users") return canManageUsers(account);
     return true;

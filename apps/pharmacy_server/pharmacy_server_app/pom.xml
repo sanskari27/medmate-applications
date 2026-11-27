@@ -115,6 +115,11 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>in.medmate</groupId>
+      <artifactId>pharmacy_server_coupons</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>

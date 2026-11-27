@@ -13,5 +13,6 @@ export {
   IconRx,
   IconSettings,
   IconStore,
+  IconTag,
   IconUsers,
 } from "./Icon";

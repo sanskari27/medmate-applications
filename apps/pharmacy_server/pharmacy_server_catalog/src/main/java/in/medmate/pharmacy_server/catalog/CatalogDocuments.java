@@ -68,6 +68,7 @@ public final class CatalogDocuments {
             String howItWorks,
             String countryOfOrigin,
             String sourceFile,
+            List<String> categories,
             List<DrugIngredient> ingredients,
             List<DrugSafety> safety,
             List<DrugFact> facts,

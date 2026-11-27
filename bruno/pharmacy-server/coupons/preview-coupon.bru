@@ -1,0 +1,48 @@
+meta {
+  name: Preview coupon
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/v1/customer/coupons/preview
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "code": "WELCOME10",
+    "orderTotal": "500.00",
+    "pharmacyId": "{{examplePharmacyId}}"
+  }
+}
+
+tests {
+  test("a customer sees the discount without spending a use", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      expect(res.body.detail).to.equal("Sign in is required");
+      return;
+    }
+    if (res.getStatus() === 403) {
+      expect(res.body.detail).to.equal("This action is not allowed.");
+      return;
+    }
+    expect(res.getStatus()).to.be.oneOf([200, 400]);
+    if (res.getStatus() === 200) {
+      expect(res.body.payable).to.be.a("string");
+      expect(res.body.banner.url).to.be.a("string");
+    }
+  });
+}
+
+docs {
+  Signed-in customer only. Does not record a redemption. pharmacyId is required when the coupon is limited to selected pharmacies.
+}

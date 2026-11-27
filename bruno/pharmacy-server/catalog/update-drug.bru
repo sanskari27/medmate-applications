@@ -25,6 +25,7 @@ body:json {
     "prescriptionRequired": false,
     "package": "Strip",
     "mrp": 30,
+    "categories": ["Pain"],
     "ingredients": [
       { "name": "Ibuprofen", "strength": "200 mg" },
       { "name": "Paracetamol", "strength": "500 mg" }
@@ -40,6 +41,7 @@ tests {
     }
     if (res.getStatus() === 200) {
       expect(res.body.drug[0].displayName).to.equal("Counter name");
+      expect(res.body.drug[0].categories).to.eql(["Pain"]);
       expect(res.body.drug[0].ingredients[0].name).to.equal("Ibuprofen");
       expect(res.body.drug[0].ingredients[1].name).to.equal("Paracetamol");
     }

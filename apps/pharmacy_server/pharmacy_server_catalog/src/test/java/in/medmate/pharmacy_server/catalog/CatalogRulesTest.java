@@ -47,6 +47,7 @@ class CatalogRulesTest {
                           "productName": " Crocin ",
                           "prescriptionRequired": false,
                           "package": " ",
+                          "categories": ["Pain", "Fever"],
                           "ingredients": [
                             {"name": "Paracetamol", "strength": "500 mg"},
                             {"name": "Caffeine"}
@@ -58,6 +59,7 @@ class CatalogRulesTest {
         assertThat(drug.draft().productId()).isEqualTo("DR100");
         assertThat(drug.draft().productName()).isEqualTo("Crocin");
         assertThat(drug.draft().packageName()).isNull();
+        assertThat(drug.draft().categories()).containsExactly("Pain", "Fever");
         assertThat(drug.draft().ingredients())
                 .extracting(CatalogDocuments.DrugIngredient::name)
                 .containsExactly("Paracetamol", "Caffeine");

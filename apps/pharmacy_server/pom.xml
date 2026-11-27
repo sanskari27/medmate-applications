@@ -38,6 +38,7 @@
     <module>pharmacy_server_oversight</module>
     <module>pharmacy_server_prep</module>
     <module>pharmacy_server_customer</module>
+    <module>pharmacy_server_coupons</module>
     <module>pharmacy_server_app</module>
   </modules>
 

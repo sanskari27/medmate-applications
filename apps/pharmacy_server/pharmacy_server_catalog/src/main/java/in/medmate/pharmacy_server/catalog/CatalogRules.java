@@ -231,6 +231,7 @@ public final class CatalogRules {
                 optional(body, "howItWorks"),
                 optional(body, "countryOfOrigin"),
                 optional(body, "sourceFile"),
+                strings(body, "categories"),
                 objects(body, "ingredients", CatalogRules::ingredient),
                 objects(body, "safety", CatalogRules::safety),
                 objects(body, "facts", CatalogRules::fact),

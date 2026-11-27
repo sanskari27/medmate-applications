@@ -1,6 +1,7 @@
 import { combineReducers } from "@reduxjs/toolkit";
 import { authApi, authReducer } from "@/features/authentication";
 import { catalogApi } from "@/features/catalog";
+import { couponsApi } from "@/features/coupons";
 import { leadsApi } from "@/features/leads";
 import { pharmaciesApi } from "@/features/pharmacies";
 import { prepApi } from "@/features/prep";
@@ -16,6 +17,7 @@ export const rootReducer = combineReducers({
   [supportApi.reducerPath]: supportApi.reducer,
   [leadsApi.reducerPath]: leadsApi.reducer,
   [catalogApi.reducerPath]: catalogApi.reducer,
+  [couponsApi.reducerPath]: couponsApi.reducer,
   [prepApi.reducerPath]: prepApi.reducer,
   [usersApi.reducerPath]: usersApi.reducer,
 });

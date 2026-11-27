@@ -156,6 +156,15 @@ export function IconHelp(props: IconProps) {
   );
 }
 
+export function IconTag(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M20 13.5 12.5 21a2 2 0 0 1-2.8 0L3 14.3V4h10.3Z" />
+      <path d="M7.5 7.5h.01" />
+    </Svg>
+  );
+}
+
 export function IconLogout({ size = 20 }: IconProps) {
   return (
     <svg

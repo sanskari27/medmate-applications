@@ -85,6 +85,7 @@ class StoreMedicineCatalogTest {
                 null,
                 null,
                 null,
+                List.of(),
                 ingredients,
                 List.of(),
                 List.of(),

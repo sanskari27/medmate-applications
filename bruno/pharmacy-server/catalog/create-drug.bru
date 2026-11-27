@@ -25,6 +25,7 @@ body:json {
     "prescriptionRequired": false,
     "package": "Strip",
     "mrp": 25,
+    "categories": ["Pain", "Fever"],
     "ingredients": [
       { "name": "Paracetamol", "strength": "500 mg" }
     ]
@@ -40,6 +41,7 @@ tests {
     if (res.getStatus() === 201) {
       expect(res.body.drug[0].productId).to.equal("DR-BRUNO");
       expect(res.body.drug[0].displayName).to.equal(null);
+      expect(res.body.drug[0].categories).to.eql(["Pain", "Fever"]);
       expect(res.body.drug[0].ingredients[0].name).to.equal("Paracetamol");
     }
   });

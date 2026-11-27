@@ -99,11 +99,15 @@ describe("CatalogEditorPage", () => {
     });
     fireEvent.change(screen.getByLabelText("Product id *"), { target: { value: "DR200" } });
     fireEvent.change(screen.getByLabelText("Product name *"), { target: { value: "Zinc" } });
+    const category = screen.getByRole("textbox", { name: "Add category" });
+    fireEvent.change(category, { target: { value: "Pain" } });
+    fireEvent.keyDown(category, { key: "Enter" });
     fireEvent.click(screen.getByRole("button", { name: "Create product" }));
     await waitFor(() => {
       expect(bodies[0]?.productId).toBe("DR200");
     });
     expect(bodies[0]?.productName).toBe("Zinc");
+    expect(bodies[0]?.categories).toEqual(["Pain"]);
     expect(bodies[0]?.prescriptionRequired).toBe(false);
     expect(bodies[0]?.displayName).toBeUndefined();
     expect(await screen.findByText("Saved.")).toBeTruthy();

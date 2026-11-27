@@ -1,0 +1,39 @@
+meta {
+  name: Update coupon
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/api/v1/coupons/{{examplePharmacyId}}
+  body: multipartForm
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:multipart-form {
+  coupon: {"code":"WELCOME10","title":"Welcome offer","discountType":"pct","discountValue":10,"active":false}
+}
+
+tests {
+  test("admin and sales can update a coupon", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      expect(res.body.detail).to.equal("Sign in is required");
+      return;
+    }
+    if (res.getStatus() === 403) {
+      expect(res.body.detail).to.equal("This action is not allowed.");
+      return;
+    }
+    expect(res.getStatus()).to.be.oneOf([200, 400, 404]);
+  });
+}
+
+docs {
+  The coupon code cannot change. Omit the banner part to keep the current image. Replace examplePharmacyId with the coupon id.
+}

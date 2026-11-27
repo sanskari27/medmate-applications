@@ -122,6 +122,7 @@ const fmcgParent: ParentField[] = [
 ];
 
 const drugChildren: ChildList[] = [
+  { key: "categories", label: "Categories", shape: "text" },
   {
     key: "ingredients",
     label: "Ingredients",

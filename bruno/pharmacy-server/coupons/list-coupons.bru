@@ -1,0 +1,36 @@
+meta {
+  name: List coupons
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/coupons
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("admin and sales can list coupons", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      expect(res.body.detail).to.equal("Sign in is required");
+      return;
+    }
+    if (res.getStatus() === 403) {
+      expect(res.body.detail).to.equal("This action is not allowed.");
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.body.coupons).to.be.an("array");
+  });
+}
+
+docs {
+  Platform admin, or staff with the sales subtype. Each coupon includes a banner link for a future mobile app.
+}

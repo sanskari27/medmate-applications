@@ -6,6 +6,7 @@ import {
   PinSetupPage,
   accountRoleLabel,
   canManageCatalog,
+  canManageCoupons,
   canManageUsers,
   canPrepareInventory,
   canReview,
@@ -15,6 +16,7 @@ import {
   useAuthState,
 } from "@/features/authentication";
 import { CatalogEditorPage, CatalogPage } from "@/features/catalog";
+import { CouponsPage } from "@/features/coupons";
 import { LeadDetailPage, LeadsPage } from "@/features/leads";
 import { PharmacyDetailPage } from "@/features/pharmacies";
 import { PrepListPage, PrepSheetPage } from "@/features/prep";
@@ -34,6 +36,7 @@ export function AppRouter() {
   const review = canReview(session?.account);
   const support = canSupport(session?.account);
   const catalog = canManageCatalog(session?.account);
+  const coupons = canManageCoupons(session?.account);
   const prepare = canPrepareInventory(session?.account);
   const users = canManageUsers(session?.account);
   const roleLabel = session ? accountRoleLabel(session.account) : "";
@@ -69,6 +72,7 @@ export function AppRouter() {
                 route.path !== "/support" &&
                 route.path !== "/leads" &&
                 route.path !== "/catalog" &&
+                route.path !== "/coupons" &&
                 route.path !== "/inventory-prep" &&
                 route.path !== "/users",
             )
@@ -126,6 +130,10 @@ export function AppRouter() {
             element={
               catalog ? <CatalogEditorPage kind="fmcg" /> : <Navigate to="/dashboard" replace />
             }
+          />
+          <Route
+            path="/coupons"
+            element={coupons ? <CouponsPage /> : <Navigate to="/dashboard" replace />}
           />
           <Route
             path="/inventory-prep"
