@@ -119,8 +119,7 @@ class AddressRulesTest {
         ObjectNode wipe = json.createObjectNode();
         wipe.putNull("latitude");
         wipe.putNull("longitude");
-        assertThat(AddressRules.prepareUpdate(wipe, current).problem())
-                .isEqualTo("Pin the delivery spot on the map");
+        assertThat(AddressRules.prepareUpdate(wipe, current).problem()).isEqualTo("Pin the delivery spot on the map");
 
         ObjectNode half = json.createObjectNode();
         half.putNull("latitude");

@@ -1,3 +1,4 @@
+import { PharmacyPin, addressFromPin } from "@/components/PharmacyPin";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
 import { Stack } from "@/components/ui/Stack";
@@ -78,6 +79,19 @@ export function BusinessCard({
             onChange={onValue((email) => onChange({ email }))}
           />
         </Field>
+        <div className="sm:col-span-6">
+          <PharmacyPin
+            latitude={draft.latitude}
+            longitude={draft.longitude}
+            onPin={(pin) =>
+              onChange({
+                latitude: pin.latitude,
+                longitude: pin.longitude,
+                ...addressFromPin(draft, pin, REGIONS),
+              })
+            }
+          />
+        </div>
         <Field label="Billing Address" htmlFor="profile-address" className="sm:col-span-6">
           <textarea
             id="profile-address"

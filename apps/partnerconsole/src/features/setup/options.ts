@@ -72,7 +72,8 @@ export const REGIONS = [
 export const STEPS = [
   { title: "Welcome", subtitle: "Let's set up your pharmacy" },
   { title: "Business profile", subtitle: "Tell us about your pharmacy" },
-  { title: "Location", subtitle: "Where is your store?" },
+  { title: "Pharmacy location", subtitle: "Pin your store on the map" },
+  { title: "Address details", subtitle: "Where is your store?" },
   { title: "Tax & licences", subtitle: "GST, PAN, drug & trade licences" },
   { title: "Pharmacist", subtitle: "Registered pharmacist on record" },
   { title: "Invoice & branding", subtitle: "How your bills look" },

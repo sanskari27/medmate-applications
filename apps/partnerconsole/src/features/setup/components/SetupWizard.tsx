@@ -15,6 +15,7 @@ import {
   InvoiceStep,
   LocationStep,
   PharmacistStep,
+  PinStep,
   ReviewStep,
   TaxStep,
   WelcomeStep,
@@ -58,7 +59,7 @@ export function SetupWizard({ phone, application, onSubmit, onSignOut }: SetupWi
 
   async function finish() {
     if (saving) return;
-    const blocked = [1, 2, 3, 4, 5]
+    const blocked = [1, 2, 3, 4, 5, 6]
       .map((index) => ({ index, message: stepIssue(draft, index) }))
       .find((item) => item.message);
     if (blocked?.message) {
@@ -138,41 +139,48 @@ export function SetupWizard({ phone, application, onSubmit, onSignOut }: SetupWi
             />
           ) : null}
           {step === 2 ? (
-            <LocationStep
+            <PinStep
               draft={draft}
               phone={phone}
               onChange={(patch) => setDraft((current) => applyPatch(current, patch))}
             />
           ) : null}
           {step === 3 ? (
-            <TaxStep
+            <LocationStep
               draft={draft}
               phone={phone}
               onChange={(patch) => setDraft((current) => applyPatch(current, patch))}
             />
           ) : null}
           {step === 4 ? (
-            <PharmacistStep
+            <TaxStep
               draft={draft}
               phone={phone}
               onChange={(patch) => setDraft((current) => applyPatch(current, patch))}
             />
           ) : null}
           {step === 5 ? (
-            <InvoiceStep
+            <PharmacistStep
               draft={draft}
               phone={phone}
               onChange={(patch) => setDraft((current) => applyPatch(current, patch))}
             />
           ) : null}
           {step === 6 ? (
-            <FeaturesStep
+            <InvoiceStep
               draft={draft}
               phone={phone}
               onChange={(patch) => setDraft((current) => applyPatch(current, patch))}
             />
           ) : null}
           {step === 7 ? (
+            <FeaturesStep
+              draft={draft}
+              phone={phone}
+              onChange={(patch) => setDraft((current) => applyPatch(current, patch))}
+            />
+          ) : null}
+          {step === 8 ? (
             <ReviewStep
               draft={draft}
               phone={phone}

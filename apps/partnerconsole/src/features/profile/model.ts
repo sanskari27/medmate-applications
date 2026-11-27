@@ -49,6 +49,8 @@ export type ProfileApplication = {
   city: string | null;
   state: string | null;
   pincode: string | null;
+  latitude: number | null;
+  longitude: number | null;
   businessTypes: string[];
   industry: string | null;
   registrationType: string | null;
@@ -75,6 +77,8 @@ export type ProfileForm = {
   city: string;
   state: string;
   pincode: string;
+  latitude: number | null;
+  longitude: number | null;
   businessTypes: string[];
   industry: string;
   registrationType: string;
@@ -113,6 +117,8 @@ export function formFromApplication(application: ProfileApplication): ProfileFor
     city: text(application.city),
     state: text(application.state),
     pincode: text(application.pincode),
+    latitude: application.latitude ?? null,
+    longitude: application.longitude ?? null,
     businessTypes: [...application.businessTypes],
     industry: text(application.industry),
     registrationType: text(application.registrationType),
@@ -162,6 +168,10 @@ export function toFormData(draft: ProfileForm): FormData {
   body.set("city", draft.city.trim());
   body.set("state", draft.state);
   body.set("pincode", draft.pincode.trim());
+  if (draft.latitude != null && draft.longitude != null) {
+    body.set("latitude", String(draft.latitude));
+    body.set("longitude", String(draft.longitude));
+  }
   for (const type of draft.businessTypes) body.append("businessTypes", type);
   body.set("industry", draft.industry);
   body.set("registrationType", draft.registrationType);
@@ -200,6 +210,8 @@ function snapshot(form: ProfileForm) {
     city: form.city,
     state: form.state,
     pincode: form.pincode,
+    latitude: form.latitude,
+    longitude: form.longitude,
     businessTypes: form.businessTypes,
     industry: form.industry,
     registrationType: form.registrationType,

@@ -63,6 +63,8 @@ public class PharmacyStore {
             String city,
             String state,
             String pincode,
+            Double latitude,
+            Double longitude,
             List<String> businessTypes,
             String industry,
             String registrationType,
@@ -101,6 +103,8 @@ public class PharmacyStore {
                     city,
                     state,
                     pincode,
+                    latitude,
+                    longitude,
                     businessTypes,
                     industry,
                     registrationType,
@@ -178,7 +182,8 @@ public class PharmacyStore {
         Optional<ApplicationRow> found = jdbc.sql(
                         """
                         SELECT p.id, p.verification_status, p.rejection_stage, p.rejection_comment, a.phone,
-                          p.name, p.tagline, p.email, p.address, p.city, p.state, p.pincode, p.business_types,
+                          p.name, p.tagline, p.email, p.address, p.city, p.state, p.pincode, p.latitude, p.longitude,
+                          p.business_types,
                           p.industry, p.registration_type, p.pharmacy_type, p.gstin, p.pan, p.drug_licence_no, p.fssai_no,
                           p.trade_licence_no, p.enable_tds, p.enable_tcs, p.pharmacist_name, p.invoice_prefix,
                           p.terms, p.accept_online_orders, p.self_order_kiosk, p.e_invoicing, p.loose_selling,
@@ -231,6 +236,8 @@ public class PharmacyStore {
                           city = :city,
                           state = :state,
                           pincode = :pincode,
+                          latitude = :latitude,
+                          longitude = :longitude,
                           business_types = :businessTypes,
                           industry = :industry,
                           registration_type = :registration,
@@ -261,6 +268,8 @@ public class PharmacyStore {
                 .param("city", input.city().trim())
                 .param("state", input.state())
                 .param("pincode", input.pincode().trim())
+                .param("latitude", input.latitude())
+                .param("longitude", input.longitude())
                 .param("businessTypes", businessTypes(input.businessTypes()))
                 .param("industry", input.industry())
                 .param("registration", input.registrationType())
@@ -294,6 +303,8 @@ public class PharmacyStore {
                           city = :city,
                           state = :state,
                           pincode = :pincode,
+                          latitude = :latitude,
+                          longitude = :longitude,
                           business_types = :businessTypes,
                           industry = :industry,
                           registration_type = :registration,
@@ -317,6 +328,8 @@ public class PharmacyStore {
                 .param("city", input.city().trim())
                 .param("state", input.state())
                 .param("pincode", input.pincode().trim())
+                .param("latitude", input.latitude())
+                .param("longitude", input.longitude())
                 .param("businessTypes", businessTypes(input.businessTypes()))
                 .param("industry", input.industry())
                 .param("registration", input.registrationType())
@@ -643,6 +656,8 @@ public class PharmacyStore {
                 rs.getString("city"),
                 rs.getString("state"),
                 rs.getString("pincode"),
+                doubleOrNull(rs, "latitude"),
+                doubleOrNull(rs, "longitude"),
                 readBusinessTypes(rs.getString("business_types")),
                 rs.getString("industry"),
                 rs.getString("registration_type"),
@@ -717,6 +732,11 @@ public class PharmacyStore {
                 rs.getString("email"),
                 submitted == null ? null : submitted.toInstant(),
                 rs.getString("pharmacy_type"));
+    }
+
+    private static Double doubleOrNull(java.sql.ResultSet rs, String column) throws java.sql.SQLException {
+        double value = rs.getDouble(column);
+        return rs.wasNull() ? null : value;
     }
 
     private static String blank(String value) {

@@ -35,6 +35,8 @@ const loaded: ProfileApplication = {
   city: "Bengaluru",
   state: "Karnataka",
   pincode: "560001",
+  latitude: 12.9716,
+  longitude: 77.5946,
   businessTypes: ["Retail Pharmacy"],
   industry: "Pharmacy & Healthcare",
   registrationType: "Proprietorship",

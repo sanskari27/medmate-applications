@@ -65,6 +65,11 @@ export function textValue(value: string | null | undefined): string {
   return trimmed.length > 0 ? trimmed : "—";
 }
 
+function pinValue(latitude: number | null | undefined, longitude: number | null | undefined) {
+  if (latitude == null || longitude == null) return "—";
+  return `${latitude}, ${longitude}`;
+}
+
 export function yesNo(value: boolean): string {
   return value ? "Yes" : "No";
 }
@@ -129,6 +134,7 @@ export function ownerSections(detail: OwnerDetail): FieldSection[] {
         { label: "City", value: textValue(detail.city) },
         { label: "State", value: textValue(detail.state) },
         { label: "Pincode", value: textValue(detail.pincode) },
+        { label: "Map pin", value: pinValue(detail.latitude, detail.longitude) },
       ],
     },
     {

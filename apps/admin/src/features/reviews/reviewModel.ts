@@ -43,6 +43,11 @@ export function slotLabel(slot: string): string {
   return SLOT_LABELS[slot] ?? slot;
 }
 
+function pinValue(latitude: number | null | undefined, longitude: number | null | undefined) {
+  if (latitude == null || longitude == null) return "—";
+  return `${latitude}, ${longitude}`;
+}
+
 export function textValue(value: string | null | undefined): string {
   const trimmed = value?.trim() ?? "";
   return trimmed.length > 0 ? trimmed : "—";
@@ -135,6 +140,7 @@ export function applicationSections(detail: ApplicationDetail): FieldSection[] {
         { label: "City", value: textValue(detail.city) },
         { label: "State", value: textValue(detail.state) },
         { label: "Pincode", value: textValue(detail.pincode) },
+        { label: "Map pin", value: pinValue(detail.latitude, detail.longitude) },
       ],
     },
     {

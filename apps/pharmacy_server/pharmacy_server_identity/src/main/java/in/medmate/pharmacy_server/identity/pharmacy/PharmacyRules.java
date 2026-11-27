@@ -90,6 +90,8 @@ public final class PharmacyRules {
             String city,
             String state,
             String pincode,
+            Double latitude,
+            Double longitude,
             List<String> businessTypes,
             String industry,
             String registrationType,
@@ -146,6 +148,8 @@ public final class PharmacyRules {
             String city,
             String state,
             String pincode,
+            Double latitude,
+            Double longitude,
             List<String> businessTypes,
             String industry,
             String registrationType,
@@ -323,6 +327,10 @@ public final class PharmacyRules {
         if (input.pincode() == null || !input.pincode().trim().matches("^[1-9][0-9]{5}$")) {
             return "Pincode is required";
         }
+        String pin = pinProblem(input.latitude(), input.longitude());
+        if (pin != null) {
+            return pin;
+        }
         if (input.businessTypes() != null) {
             for (String type : input.businessTypes()) {
                 if (!BUSINESS_TYPES.contains(type)) {
@@ -404,6 +412,8 @@ public final class PharmacyRules {
                 input.city(),
                 input.state(),
                 input.pincode(),
+                input.latitude(),
+                input.longitude(),
                 input.businessTypes(),
                 input.industry(),
                 input.registrationType(),
@@ -510,6 +520,23 @@ public final class PharmacyRules {
 
     private static boolean allowed(String contentType, boolean imageOnly) {
         return (imageOnly ? IMAGES : DOCUMENTS).contains(media(contentType));
+    }
+
+    private static String pinProblem(Double latitude, Double longitude) {
+        if (latitude == null || longitude == null) {
+            return "Pin your pharmacy on the map";
+        }
+        if (!inRange(latitude, -90, 90)) {
+            return "Latitude is out of range";
+        }
+        if (!inRange(longitude, -180, 180)) {
+            return "Longitude is out of range";
+        }
+        return null;
+    }
+
+    private static boolean inRange(double value, double min, double max) {
+        return Double.isFinite(value) && value >= min && value <= max;
     }
 
     private static boolean blank(String value) {

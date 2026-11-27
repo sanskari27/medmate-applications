@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pharmacy location</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        color: #14281c;
+        font: 14px/1.4 system-ui, sans-serif;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+      }
+      form {
+        display: flex;
+        gap: 8px;
+        padding: 8px;
+      }
+      input {
+        flex: 1;
+        min-width: 0;
+        border: 1px solid #c9d7ce;
+        border-radius: 6px;
+        padding: 8px 10px;
+        font: inherit;
+      }
+      button {
+        border: 1px solid #1f6b45;
+        border-radius: 6px;
+        background: #1f6b45;
+        color: #fff;
+        font: inherit;
+        font-weight: 700;
+        padding: 8px 10px;
+        cursor: pointer;
+      }
+      button.ghost {
+        background: #fff;
+        color: #1f6b45;
+      }
+      #results {
+        list-style: none;
+        margin: 0;
+        padding: 0 8px;
+      }
+      #results button {
+        display: block;
+        width: 100%;
+        margin-bottom: 6px;
+        background: #f4faf6;
+        color: #14281c;
+        border-color: #c9d7ce;
+        text-align: left;
+        font-weight: 600;
+      }
+      #map {
+        flex: 1;
+        min-height: 240px;
+      }
+      #status {
+        margin: 0;
+        padding: 6px 8px 8px;
+        color: #4d6658;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <form id="search">
+      <input id="query" type="search" placeholder="Search for your pharmacy" aria-label="Search for your pharmacy" />
+      <button type="submit">Search</button>
+      <button id="locate" class="ghost" type="button">Use my location</button>
+    </form>
+    <ul id="results"></ul>
+    <div id="map" role="application" aria-label="Pharmacy map"></div>
+    <p id="status">Search or drop a pin on your pharmacy.</p>
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <script>
+      const TYPE = "medmate-pharmacy-pin";
+      const ORIGIN = window.location.origin;
+      const GAP = 1100;
+      const BENGALURU = [12.9716, 77.5946];
+      const status = document.getElementById("status");
+      const results = document.getElementById("results");
+      let marker = null;
+      let current = null;
+      let timer = 0;
+      let lastCall = 0;
+
+      delete L.Icon.Default.prototype._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+        iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+      });
+
+      const map = L.map("map", { zoomControl: true, attributionControl: false }).setView(BENGALURU, 12);
+      L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(map);
+
+      function schedule(task) {
+        window.clearTimeout(timer);
+        const wait = Math.max(350, lastCall + GAP - Date.now());
+        timer = window.setTimeout(() => {
+          lastCall = Date.now();
+          task();
+        }, wait);
+      }
+
+      function addressFrom(address) {
+        const parts = address || {};
+        const line = [parts.house_number, parts.road || parts.pedestrian || parts.neighbourhood]
+          .filter(Boolean)
+          .join(" ");
+        return {
+          address: line,
+          city: parts.city || parts.town || parts.village || parts.municipality || "",
+          state: parts.state || "",
+          pincode: String(parts.postcode || "").replace(/\s/g, ""),
+        };
+      }
+
+      function publish(latitude, longitude, suggestion) {
+        if (!window.parent || window.parent === window) return;
+        const place = suggestion || {};
+        window.parent.postMessage(
+          {
+            type: TYPE,
+            latitude,
+            longitude,
+            address: place.address || "",
+            city: place.city || "",
+            state: place.state || "",
+            pincode: place.pincode || "",
+          },
+          ORIGIN,
+        );
+      }
+
+      function show(latitude, longitude, announce) {
+        const unchanged =
+          current && Math.abs(current.lat - latitude) < 1e-7 && Math.abs(current.lng - longitude) < 1e-7;
+        current = { lat: latitude, lng: longitude };
+        if (!marker) {
+          marker = L.marker([latitude, longitude], { draggable: true }).addTo(map);
+          marker.on("dragend", () => {
+            const at = marker.getLatLng();
+            show(at.lat, at.lng, true);
+          });
+        } else {
+          marker.setLatLng([latitude, longitude]);
+        }
+        if (!unchanged) map.setView([latitude, longitude], Math.max(map.getZoom(), 16));
+        status.textContent = "Pinned at " + latitude.toFixed(5) + ", " + longitude.toFixed(5);
+        if (!announce) return;
+        publish(latitude, longitude, {});
+        schedule(() => reverse(latitude, longitude));
+      }
+
+      function reverse(latitude, longitude) {
+        const url =
+          "https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&lat=" +
+          encodeURIComponent(latitude) +
+          "&lon=" +
+          encodeURIComponent(longitude);
+        fetch(url, { headers: { Accept: "application/json" } })
+          .then((response) => (response.ok ? response.json() : null))
+          .then((body) => {
+            if (!body || !current) return;
+            if (Math.abs(current.lat - latitude) > 1e-7 || Math.abs(current.lng - longitude) > 1e-7) return;
+            publish(latitude, longitude, addressFrom(body.address));
+          })
+          .catch(() => undefined);
+      }
+
+      function search(query) {
+        const url =
+          "https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&countrycodes=in&limit=5&q=" +
+          encodeURIComponent(query);
+        fetch(url, { headers: { Accept: "application/json" } })
+          .then((response) => (response.ok ? response.json() : []))
+          .then((places) => {
+            results.replaceChildren();
+            if (!Array.isArray(places) || places.length === 0) {
+              status.textContent = "No matches. Try a street or area name.";
+              return;
+            }
+            for (const place of places) {
+              const item = document.createElement("li");
+              const button = document.createElement("button");
+              button.type = "button";
+              button.textContent = place.display_name;
+              button.addEventListener("click", () => {
+                results.replaceChildren();
+                const latitude = Number(place.lat);
+                const longitude = Number(place.lon);
+                show(latitude, longitude, false);
+                publish(latitude, longitude, addressFrom(place.address));
+              });
+              item.append(button);
+              results.append(item);
+            }
+          })
+          .catch(() => {
+            status.textContent = "Search is unavailable right now.";
+          });
+      }
+
+      document.getElementById("search").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const query = document.getElementById("query").value.trim();
+        if (!query) return;
+        schedule(() => search(query));
+      });
+
+      document.getElementById("locate").addEventListener("click", () => {
+        if (!navigator.geolocation) {
+          status.textContent = "This browser cannot share your location.";
+          return;
+        }
+        status.textContent = "Finding your location…";
+        navigator.geolocation.getCurrentPosition(
+          (position) => show(position.coords.latitude, position.coords.longitude, true),
+          () => {
+            status.textContent = "Location was not shared. Search or drop a pin instead.";
+          },
+          { enableHighAccuracy: true, timeout: 10000 },
+        );
+      });
+
+      map.on("click", (event) => show(event.latlng.lat, event.latlng.lng, true));
+
+      window.addEventListener("message", (event) => {
+        if (event.origin !== ORIGIN || event.source !== window.parent) return;
+        const data = event.data;
+        if (!data || data.type !== TYPE) return;
+        if (typeof data.latitude !== "number" || typeof data.longitude !== "number") return;
+        if (!Number.isFinite(data.latitude) || !Number.isFinite(data.longitude)) return;
+        show(data.latitude, data.longitude, false);
+      });
+
+      window.addEventListener("load", () => map.invalidateSize());
+    </script>
+  </body>
+</html>

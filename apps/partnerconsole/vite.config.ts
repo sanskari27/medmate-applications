@@ -22,6 +22,9 @@ export default defineConfig({
       "/pharmacy": {
         target: "http://127.0.0.1:8080",
         changeOrigin: true,
+        bypass(req) {
+          if (req.url?.startsWith("/pharmacy-pin")) return req.url;
+        },
       },
       "/pharmacies": {
         target: "http://127.0.0.1:8080",

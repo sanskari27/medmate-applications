@@ -318,6 +318,8 @@ class IdentityFlowIT {
         assertThat(detail.get("city").asText()).isEqualTo("Bengaluru");
         assertThat(detail.get("state").asText()).isEqualTo("Karnataka");
         assertThat(detail.get("pincode").asText()).isEqualTo("560001");
+        assertThat(detail.get("latitude").asDouble()).isEqualTo(12.9716);
+        assertThat(detail.get("longitude").asDouble()).isEqualTo(77.5946);
         assertThat(detail.get("businessTypes").get(0).asText()).isEqualTo("Retail Pharmacy");
         assertThat(detail.get("industry").asText()).isEqualTo("Pharmacy & Healthcare");
         assertThat(detail.get("registrationType").asText()).isEqualTo("Proprietorship");
@@ -1277,6 +1279,8 @@ class IdentityFlowIT {
         body.add("city", "Bengaluru");
         body.add("state", "Karnataka");
         body.add("pincode", "560001");
+        body.add("latitude", "12.9716");
+        body.add("longitude", "77.5946");
         body.add("businessTypes", "Retail Pharmacy");
         body.add("industry", "Pharmacy & Healthcare");
         body.add("registrationType", "Proprietorship");
@@ -1442,6 +1446,8 @@ class IdentityFlowIT {
         body.add("city", "Bengaluru");
         body.add("state", "Karnataka");
         body.add("pincode", "560001");
+        body.add("latitude", "12.9716");
+        body.add("longitude", "77.5946");
         body.add("businessTypes", "Retail Pharmacy");
         body.add("industry", "Pharmacy & Healthcare");
         body.add("registrationType", "Proprietorship");

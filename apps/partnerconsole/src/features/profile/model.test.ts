@@ -16,6 +16,8 @@ const application: ProfileApplication = {
   city: "Bengaluru",
   state: "Karnataka",
   pincode: "560001",
+  latitude: 12.9716,
+  longitude: 77.5946,
   businessTypes: ["Retail Pharmacy"],
   industry: "Pharmacy & Healthcare",
   registrationType: "Proprietorship",
@@ -60,6 +62,8 @@ describe("profile model", () => {
     expect(body.get("pharmacyType")).toBeNull();
     expect(body.get("acceptOnlineOrders")).toBeNull();
     expect(body.get("tagline")).toBe("Open early");
+    expect(body.get("latitude")).toBe("12.9716");
+    expect(body.get("longitude")).toBe("77.5946");
     expect(body.get("gstin")).toBe("29ABCDE1234F1Z5");
     expect(body.has("logo")).toBe(false);
     expect(body.has("terms")).toBe(false);

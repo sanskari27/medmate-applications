@@ -43,10 +43,22 @@ function known(value: string, options: readonly string[]) {
 
 export function stepIssue(draft: SetupDraft, step: number) {
   if (step === 1) return businessIssue(draft);
-  if (step === 2) return locationIssue(draft);
-  if (step === 3) return taxIssue(draft);
-  if (step === 4) return pharmacistIssue(draft);
-  if (step === 5) return invoiceIssue(draft);
+  if (step === 2) return pinIssue(draft);
+  if (step === 3) return locationIssue(draft);
+  if (step === 4) return taxIssue(draft);
+  if (step === 5) return pharmacistIssue(draft);
+  if (step === 6) return invoiceIssue(draft);
+  return null;
+}
+
+function pinIssue(draft: SetupDraft) {
+  if (draft.latitude == null || draft.longitude == null) return "Pin your pharmacy on the map";
+  if (!Number.isFinite(draft.latitude) || draft.latitude < -90 || draft.latitude > 90) {
+    return "Latitude is out of range";
+  }
+  if (!Number.isFinite(draft.longitude) || draft.longitude < -180 || draft.longitude > 180) {
+    return "Longitude is out of range";
+  }
   return null;
 }
 

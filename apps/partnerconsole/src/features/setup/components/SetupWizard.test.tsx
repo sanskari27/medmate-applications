@@ -16,6 +16,8 @@ const application: PharmacyApplication = {
   city: "Bengaluru",
   state: "Karnataka",
   pincode: "560001",
+  latitude: 12.9716,
+  longitude: 77.5946,
   businessTypes: ["Retail Pharmacy"],
   industry: "Pharmacy & Healthcare",
   registrationType: "Proprietorship",
@@ -54,6 +56,8 @@ describe("SetupWizard", () => {
       expect(body.get("pharmacyType")).toBe("pharmacy");
       expect(body.get("gstCertificate")).toBeNull();
       expect(body.get("name")).toBe("Care Pharmacy");
+      expect(body.get("latitude")).toBe("12.9716");
+      expect(body.get("longitude")).toBe("77.5946");
       return null;
     });
     render(
@@ -75,7 +79,7 @@ describe("SetupWizard", () => {
     expect((screen.getByRole("option", { name: "Pharmacy" }) as HTMLOptionElement).disabled).toBe(
       false,
     );
-    for (let step = 0; step < 6; step += 1) {
+    for (let step = 0; step < 7; step += 1) {
       fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     }
     fireEvent.click(screen.getByRole("button", { name: "Finish setup" }));

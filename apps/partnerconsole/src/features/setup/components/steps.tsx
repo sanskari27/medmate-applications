@@ -1,4 +1,5 @@
 import type { ChangeEvent } from "react";
+import { PharmacyPin, addressFromPin } from "@/components/PharmacyPin";
 import { Box } from "@/components/ui/Box";
 import { Field } from "@/components/ui/Field";
 import { Heading } from "@/components/ui/Heading";
@@ -147,6 +148,22 @@ export function BusinessStep({ draft, phone, onChange }: StepProps) {
         </Field>
       </Box>
     </Stack>
+  );
+}
+
+export function PinStep({ draft, onChange }: StepProps) {
+  return (
+    <PharmacyPin
+      latitude={draft.latitude}
+      longitude={draft.longitude}
+      onPin={(pin) =>
+        onChange({
+          latitude: pin.latitude,
+          longitude: pin.longitude,
+          ...addressFromPin(draft, pin, REGIONS),
+        })
+      }
+    />
   );
 }
 
@@ -421,6 +438,14 @@ export function ReviewStep({ draft }: StepProps) {
       </Stack>
       <Box className="grid grid-cols-2 gap-x-[18px] gap-y-1">
         <ReviewLine label="Pharmacy type" value={type} />
+        <ReviewLine
+          label="Map pin"
+          value={
+            draft.latitude != null && draft.longitude != null
+              ? `${draft.latitude}, ${draft.longitude}`
+              : "—"
+          }
+        />
         <ReviewLine label="GSTIN" value={attached(draft, "gst", draft.gstin)} />
         <ReviewLine label="PAN" value={attached(draft, "pan", draft.pan)} />
         <ReviewLine

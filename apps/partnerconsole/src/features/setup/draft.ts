@@ -29,6 +29,8 @@ export function emptyDraft(): SetupDraft {
     city: "",
     pincode: "",
     state: "",
+    latitude: null,
+    longitude: null,
     gstin: "",
     pan: "",
     drugLicenceNo: "",
@@ -61,6 +63,8 @@ export function draftFromApplication(application: PharmacyApplication): SetupDra
     city: text(application.city),
     pincode: text(application.pincode),
     state: text(application.state),
+    latitude: application.latitude ?? null,
+    longitude: application.longitude ?? null,
     gstin: text(application.gstin),
     pan: text(application.pan),
     drugLicenceNo: text(application.drugLicenceNo),
@@ -111,6 +115,10 @@ export function applicationForm(draft: SetupDraft) {
   body.set("city", draft.city.trim());
   body.set("state", draft.state);
   body.set("pincode", draft.pincode.trim());
+  if (draft.latitude != null && draft.longitude != null) {
+    body.set("latitude", String(draft.latitude));
+    body.set("longitude", String(draft.longitude));
+  }
   for (const type of draft.businessTypes) body.append("businessTypes", type);
   body.set("industry", draft.industry);
   body.set("registrationType", draft.registrationType);

@@ -38,6 +38,8 @@ export type PharmacyApplication = {
   city: string | null;
   state: string | null;
   pincode: string | null;
+  latitude: number | null;
+  longitude: number | null;
   businessTypes: string[];
   industry: string | null;
   registrationType: string | null;
@@ -80,6 +82,8 @@ export type SetupDraft = {
   city: string;
   pincode: string;
   state: string;
+  latitude: number | null;
+  longitude: number | null;
   gstin: string;
   pan: string;
   drugLicenceNo: string;

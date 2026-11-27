@@ -15,6 +15,8 @@ function validDraft(): SetupDraft {
     city: "Bengaluru",
     pincode: "560001",
     state: "Karnataka",
+    latitude: 12.9716,
+    longitude: 77.5946,
     gstin: "29ABCDE1234F1Z5",
     pan: "ABCDE1234F",
     drugLicenceNo: "DL-1",
@@ -43,37 +45,47 @@ describe("stepIssue", () => {
     expect(stepIssue(draft, 1)).toBeNull();
   });
 
+  it("requires a map pin before the address", () => {
+    const draft = validDraft();
+    draft.latitude = null;
+    draft.longitude = null;
+    expect(stepIssue(draft, 2)).toBe("Pin your pharmacy on the map");
+    draft.latitude = 12.9716;
+    draft.longitude = 77.5946;
+    expect(stepIssue(draft, 2)).toBeNull();
+  });
+
   it("requires a six-digit pincode that does not start with zero", () => {
     const draft = validDraft();
     draft.pincode = "012345";
-    expect(stepIssue(draft, 2)).toBe("Pincode is required");
+    expect(stepIssue(draft, 3)).toBe("Pincode is required");
     draft.pincode = "560001";
-    expect(stepIssue(draft, 2)).toBeNull();
+    expect(stepIssue(draft, 3)).toBeNull();
   });
 
   it("requires a GSTIN in the server pattern", () => {
     const draft = validDraft();
     draft.gstin = "bad";
-    expect(stepIssue(draft, 3)).toBe("Enter a valid GSTIN");
+    expect(stepIssue(draft, 4)).toBe("Enter a valid GSTIN");
   });
 
   it("accepts a stored document in place of a new file", () => {
     const draft = validDraft();
     draft.stored = draft.stored.filter((document) => document.slot !== "gst");
     expect(hasDocument(draft, "gst")).toBe(false);
-    expect(stepIssue(draft, 3)).toBe("GST certificate is required");
+    expect(stepIssue(draft, 4)).toBe("GST certificate is required");
     draft.stored = [...draft.stored, { slot: "gst", contentType: "application/pdf", url: "/gst" }];
-    expect(stepIssue(draft, 3)).toBeNull();
+    expect(stepIssue(draft, 4)).toBeNull();
   });
 
   it("requires the pharmacist certificate", () => {
     const draft = validDraft();
     draft.stored = draft.stored.filter((document) => document.slot !== "pharmacist-certificate");
-    expect(stepIssue(draft, 4)).toBe("Pharmacist certificate is required");
+    expect(stepIssue(draft, 5)).toBe("Pharmacist certificate is required");
     draft.stored = [
       ...draft.stored,
       { slot: "pharmacist-certificate", contentType: "application/pdf", url: "/pharmacist" },
     ];
-    expect(stepIssue(draft, 4)).toBeNull();
+    expect(stepIssue(draft, 5)).toBeNull();
   });
 });

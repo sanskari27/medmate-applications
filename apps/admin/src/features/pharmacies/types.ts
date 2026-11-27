@@ -54,6 +54,8 @@ export type OwnerDetail = {
   city: string | null;
   state: string | null;
   pincode: string | null;
+  latitude: number | null;
+  longitude: number | null;
   businessTypes: string[];
   industry: string | null;
   registrationType: string | null;

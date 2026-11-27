@@ -14,6 +14,20 @@ class PharmacyRulesTest {
     }
 
     @Test
+    void rejectsAMissingOrOutOfRangePin() {
+        assertThat(PharmacyRules.invalid(placed(sample(), null, null), "+919876543210"))
+                .isEqualTo("Pin your pharmacy on the map");
+        assertThat(PharmacyRules.invalid(placed(sample(), 12.9716, null), "+919876543210"))
+                .isEqualTo("Pin your pharmacy on the map");
+        assertThat(PharmacyRules.invalid(placed(sample(), 91.0, 77.5946), "+919876543210"))
+                .isEqualTo("Latitude is out of range");
+        assertThat(PharmacyRules.invalid(placed(sample(), Double.NaN, 77.5946), "+919876543210"))
+                .isEqualTo("Latitude is out of range");
+        assertThat(PharmacyRules.invalid(placed(sample(), 12.9716, 181.0), "+919876543210"))
+                .isEqualTo("Longitude is out of range");
+    }
+
+    @Test
     void rejectsAnInvalidGstinADisabledAlertAndAChangedPhone() {
         PharmacyRules.ApplicationInput gstin =
                 copy(sample(), "bad", sample().lowStockAlerts(), sample().submittedPhone());
@@ -109,6 +123,8 @@ class PharmacyRulesTest {
                 "Bengaluru",
                 "Karnataka",
                 "560001",
+                12.9716,
+                77.5946,
                 List.of("Retail Pharmacy"),
                 "Pharmacy & Healthcare",
                 "Proprietorship",
@@ -144,6 +160,8 @@ class PharmacyRulesTest {
                 input.city(),
                 input.state(),
                 input.pincode(),
+                input.latitude(),
+                input.longitude(),
                 input.businessTypes(),
                 input.industry(),
                 input.registrationType(),
@@ -179,6 +197,8 @@ class PharmacyRulesTest {
                 input.city(),
                 input.state(),
                 input.pincode(),
+                input.latitude(),
+                input.longitude(),
                 input.businessTypes(),
                 input.industry(),
                 input.registrationType(),
@@ -214,6 +234,8 @@ class PharmacyRulesTest {
                 input.city(),
                 input.state(),
                 input.pincode(),
+                input.latitude(),
+                input.longitude(),
                 input.businessTypes(),
                 input.industry(),
                 input.registrationType(),
@@ -249,6 +271,8 @@ class PharmacyRulesTest {
                 input.city(),
                 input.state(),
                 input.pincode(),
+                input.latitude(),
+                input.longitude(),
                 input.businessTypes(),
                 input.industry(),
                 input.registrationType(),
@@ -285,6 +309,8 @@ class PharmacyRulesTest {
                 "Bengaluru",
                 "Karnataka",
                 "560001",
+                12.9716,
+                77.5946,
                 List.of("Retail Pharmacy"),
                 "Pharmacy & Healthcare",
                 "Proprietorship",
@@ -315,6 +341,48 @@ class PharmacyRulesTest {
                 "9876543210");
     }
 
+    private static PharmacyRules.ApplicationInput placed(
+            PharmacyRules.ApplicationInput input, Double latitude, Double longitude) {
+        return new PharmacyRules.ApplicationInput(
+                input.name(),
+                input.tagline(),
+                input.email(),
+                input.address(),
+                input.city(),
+                input.state(),
+                input.pincode(),
+                latitude,
+                longitude,
+                input.businessTypes(),
+                input.industry(),
+                input.registrationType(),
+                input.pharmacyType(),
+                input.gstin(),
+                input.gst(),
+                input.pan(),
+                input.panCard(),
+                input.drugLicenceNo(),
+                input.drugLicence(),
+                input.fssaiNo(),
+                input.fssai(),
+                input.tradeLicenceNo(),
+                input.tradeLicence(),
+                input.enableTds(),
+                input.enableTcs(),
+                input.pharmacistName(),
+                input.pharmacistCertificate(),
+                input.invoicePrefix(),
+                input.signature(),
+                input.terms(),
+                input.acceptOnlineOrders(),
+                input.selfOrderKiosk(),
+                input.eInvoicing(),
+                input.looseSelling(),
+                input.lowStockAlerts(),
+                input.logo(),
+                input.submittedPhone());
+    }
+
     private static PharmacyRules.ApplicationInput copy(
             PharmacyRules.ApplicationInput input, String gstin, Boolean lowStockAlerts, String phone) {
         return new PharmacyRules.ApplicationInput(
@@ -325,6 +393,8 @@ class PharmacyRulesTest {
                 input.city(),
                 input.state(),
                 input.pincode(),
+                input.latitude(),
+                input.longitude(),
                 input.businessTypes(),
                 input.industry(),
                 input.registrationType(),
@@ -364,6 +434,8 @@ class PharmacyRulesTest {
                 input.city(),
                 input.state(),
                 input.pincode(),
+                input.latitude(),
+                input.longitude(),
                 input.businessTypes(),
                 input.industry(),
                 input.registrationType(),
@@ -403,6 +475,8 @@ class PharmacyRulesTest {
                 input.city(),
                 input.state(),
                 input.pincode(),
+                input.latitude(),
+                input.longitude(),
                 input.businessTypes(),
                 input.industry(),
                 input.registrationType(),
