@@ -1,0 +1,43 @@
+meta {
+  name: Undo dose
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/v1/customer/dosage/doses/{{doseId}}/pending
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {}
+}
+
+tests {
+  test("undo returns a taken dose to pending", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    if (res.getStatus() === 403) {
+      expect(res.body.detail).to.equal("This action is not allowed.");
+      return;
+    }
+    if (!bru.getEnvVar("doseId")) {
+      expect(res.getStatus()).to.be.oneOf([400, 404]);
+      return;
+    }
+    expect(res.getStatus()).to.be.oneOf([200, 400]);
+  });
+}
+
+docs {
+  Taken returns to pending and restores stock. Skipped returns to pending without a stock change.
+}

@@ -1,0 +1,56 @@
+meta {
+  name: Create medicine
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{baseUrl}}/api/v1/customer/medicines
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "memberId": "{{familyMemberId}}",
+    "name": "Telma 40",
+    "doseAmount": 1,
+    "doseUnit": "tablet",
+    "food": "after",
+    "weekdays": "1111111",
+    "startsOn": "2026-11-30",
+    "stockUnits": 10,
+    "reminders": true,
+    "times": ["08:00", "20:00"]
+  }
+}
+
+tests {
+  test("a customer adds a medicine to the schedule", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    if (res.getStatus() === 403) {
+      expect(res.body.detail).to.equal("This action is not allowed.");
+      return;
+    }
+    if (!bru.getEnvVar("familyMemberId")) {
+      expect(res.getStatus()).to.be.oneOf([400, 404]);
+      return;
+    }
+    expect(res.getStatus()).to.equal(201);
+    expect(res.body.medicine.name).to.equal("Telma 40");
+    bru.setEnvVar("medicineId", res.body.medicine.id);
+  });
+}
+
+docs {
+  One to six times. A productId must exist in the catalogue. Stock is whole units on hand.
+}

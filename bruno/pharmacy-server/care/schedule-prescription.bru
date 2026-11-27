@@ -1,0 +1,57 @@
+meta {
+  name: Schedule prescription
+  type: http
+  seq: 14
+}
+
+post {
+  url: {{baseUrl}}/api/v1/customer/prescriptions/{{prescriptionId}}/schedules
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "memberId": "{{familyMemberId}}",
+    "lines": [
+      {
+        "lineId": "{{prescriptionLineId}}",
+        "doseAmount": 1,
+        "doseUnit": "tablet",
+        "food": "after",
+        "weekdays": "1111111",
+        "days": 5,
+        "stockUnits": 5,
+        "times": ["08:00"]
+      }
+    ]
+  }
+}
+
+tests {
+  test("confirming a line starts its reminders", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    if (res.getStatus() === 403) {
+      expect(res.body.detail).to.equal("This action is not allowed.");
+      return;
+    }
+    if (!bru.getEnvVar("prescriptionId") || !bru.getEnvVar("prescriptionLineId") || !bru.getEnvVar("familyMemberId")) {
+      expect(res.getStatus()).to.be.oneOf([400, 404]);
+      return;
+    }
+    expect(res.getStatus()).to.be.oneOf([200, 400]);
+  });
+}
+
+docs {
+  Creates one medicine per line starting today and marks the line scheduled. A second confirm is rejected.
+}

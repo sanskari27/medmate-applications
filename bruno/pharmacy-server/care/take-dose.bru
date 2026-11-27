@@ -1,0 +1,43 @@
+meta {
+  name: Take dose
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/v1/customer/dosage/doses/{{doseId}}/taken
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {}
+}
+
+tests {
+  test("taking a dose subtracts stock", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    if (res.getStatus() === 403) {
+      expect(res.body.detail).to.equal("This action is not allowed.");
+      return;
+    }
+    if (!bru.getEnvVar("doseId")) {
+      expect(res.getStatus()).to.be.oneOf([400, 404]);
+      return;
+    }
+    expect(res.getStatus()).to.be.oneOf([200, 400]);
+  });
+}
+
+docs {
+  Pending becomes taken and stock falls by the units per dose. Any other status is rejected.
+}

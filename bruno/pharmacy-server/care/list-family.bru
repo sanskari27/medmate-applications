@@ -1,0 +1,39 @@
+meta {
+  name: List family
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/customer/family
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("a customer sees the family, including themselves", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    if (res.getStatus() === 403) {
+      expect(res.body.detail).to.equal("This action is not allowed.");
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.body.members).to.be.an("array");
+    const self = res.body.members.find((member) => member.relation === "self");
+    if (self) {
+      bru.setEnvVar("familyMemberId", self.id);
+    }
+  });
+}
+
+docs {
+  Customer accounts only. The account holder is created on the first read.
+}

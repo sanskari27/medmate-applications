@@ -1,0 +1,39 @@
+meta {
+  name: List prescriptions
+  type: http
+  seq: 12
+}
+
+get {
+  url: {{baseUrl}}/api/v1/customer/prescriptions
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("a customer lists prescriptions", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    if (res.getStatus() === 403) {
+      expect(res.body.detail).to.equal("This action is not allowed.");
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.body.prescriptions).to.be.an("array");
+    const open = res.body.prescriptions.find((item) => item.open);
+    if (open) {
+      bru.setEnvVar("prescriptionId", open.id);
+    }
+  });
+}
+
+docs {
+  Read only. A doctor writer is not part of this collection.
+}

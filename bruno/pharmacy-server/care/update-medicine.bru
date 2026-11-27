@@ -1,0 +1,47 @@
+meta {
+  name: Update medicine
+  type: http
+  seq: 11
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/customer/medicines/{{medicineId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "stockUnits": 8,
+    "note": "After breakfast"
+  }
+}
+
+tests {
+  test("a customer updates a scheduled medicine", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      return;
+    }
+    if (res.getStatus() === 403) {
+      expect(res.body.detail).to.equal("This action is not allowed.");
+      return;
+    }
+    if (!bru.getEnvVar("medicineId")) {
+      expect(res.getStatus()).to.be.oneOf([400, 404]);
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.body.medicine.stockUnits).to.equal(8);
+  });
+}
+
+docs {
+  Pending doses from today forward are rebuilt from the new times.
+}
