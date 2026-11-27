@@ -40,6 +40,7 @@
     <module>pharmacy_server_customer</module>
     <module>pharmacy_server_coupons</module>
     <module>pharmacy_server_cart</module>
+    <module>pharmacy_server_care</module>
     <module>pharmacy_server_app</module>
   </modules>
 
