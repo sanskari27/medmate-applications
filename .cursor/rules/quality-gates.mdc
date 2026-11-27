@@ -1,0 +1,38 @@
+---
+description: After a task, run each changed app's quality gates and fix failures
+alwaysApply: true
+---
+
+# Finish on green quality gates
+
+Before declaring a task complete, run the quality gates for every app under `apps/` that the task changed. Read `qualityGates` from that app's `medmate.json`. Skip apps the task did not touch. A docs-only or rules-only change has no app gates.
+
+Run only the listed gates, in this order: `format`, `lint`, `typecheck`, `unit`, `integration`, `build`, `docker`. These are the same checks `pnpm medmate deploy` runs. Use the local commands below. They match the Dockerfile stages and fail faster than a Docker build.
+
+From `apps/admin` or `apps/partnerconsole`:
+
+- `format`: `npm run format`. On failure, `npm run format:write`, then `npm run format` again.
+- `lint`: `npm run lint`
+- `typecheck`: `npm run typecheck`
+- `unit`: `npm run unit`
+- `build`: `npm run build`
+- `docker`: from the repo root, `pnpm exec nx run <app>:docker`
+
+From `apps/pharmacy_server`:
+
+- `format`: `make format`, then `make format-check`
+- `lint`: `make format-check`
+- `typecheck`: `./mvnw -B -DskipTests compile` (Java 21, same as the Makefile)
+- `unit`: `make test`
+- `integration`: `./mvnw -B -Dsurefire.skip=true -Dspotless.check.skip=true verify`
+- `build`: `make package`
+- `docker`: from the repo root, `pnpm exec nx run pharmacy_server:docker`
+
+Fix the cause, then re-run the failed gate and every later gate for that app. Do not stop at the first failure you can patch around, and do not report the task done while a gate for a changed app is still failing.
+
+```bash
+# partnerconsole format failed on public/pharmacy-pin/index.html
+cd apps/partnerconsole
+npm run format:write
+npm run format
+```

@@ -210,9 +210,15 @@ async function writeCaddySite(config) {
 	header {
 		X-Content-Type-Options nosniff
 		Referrer-Policy strict-origin-when-cross-origin
-		X-Frame-Options DENY
 		Strict-Transport-Security "max-age=15552000"
 	}
+	# The pharmacy map is a same-origin iframe. Other sites still cannot frame the app.
+	@map path /pharmacy-pin/*
+	header @map X-Frame-Options SAMEORIGIN
+	@app {
+		not path /pharmacy-pin/*
+	}
+	header @app X-Frame-Options DENY
 	reverse_proxy ${config.name}:${config.port}
 }
 `;
