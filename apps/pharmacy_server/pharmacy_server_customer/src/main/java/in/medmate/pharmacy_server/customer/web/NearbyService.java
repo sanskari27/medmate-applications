@@ -45,7 +45,7 @@ public class NearbyService {
         return new NearbyViews.ListResponse(pharmacies);
     }
 
-    private static NearbyViews.PharmacyView view(NearbyStore.NearbyRow row, Instant now) {
+    private NearbyViews.PharmacyView view(NearbyStore.NearbyRow row, Instant now) {
         NearbyRules.HoursNow today = NearbyRules.today(row.openingHours(), now);
         double distanceKm = Math.round(row.distanceKm() * 1000.0) / 1000.0;
         DeliveryChargePolicy.Quote charge = DeliveryChargePolicy.quote(distanceKm);
