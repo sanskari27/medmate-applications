@@ -1,0 +1,45 @@
+meta {
+  name: Quote wallet
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{baseUrl}}/api/v1/customer/wallet/quote
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "payable": "249.50"
+  }
+}
+
+tests {
+  test("a customer sees how many credits a payment would use", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      expect(res.body.detail).to.equal("Sign in is required");
+      return;
+    }
+    if (res.getStatus() === 403) {
+      expect(res.body.detail).to.equal("This action is not allowed.");
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.body.balance).to.be.a("number");
+    expect(res.body.applied).to.be.a("number");
+    expect(res.body.due).to.be.a("string");
+  });
+}
+
+docs {
+  Customer accounts only. Does not debit the wallet. Whole rupees can be applied; paise stay on the amount due.
+}

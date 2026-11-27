@@ -1,0 +1,36 @@
+meta {
+  name: List wallet entries
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/api/v1/customer/wallet/entries
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("a customer sees wallet credits and debits", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      expect(res.body.detail).to.equal("Sign in is required");
+      return;
+    }
+    if (res.getStatus() === 403) {
+      expect(res.body.detail).to.equal("This action is not allowed.");
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.body.entries).to.be.an("array");
+  });
+}
+
+docs {
+  Customer accounts only. Newest entry first. Kinds are order (+15), referral (+100), and payment (a debit).
+}

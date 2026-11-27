@@ -1,0 +1,45 @@
+meta {
+  name: Save referral
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/api/v1/customer/wallet/referral
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "code": "ABCD2345"
+  }
+}
+
+tests {
+  test("a customer saves a friend's referral code", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      expect(res.body.detail).to.equal("Sign in is required");
+      return;
+    }
+    if (res.getStatus() === 403) {
+      expect(res.body.detail).to.equal("This action is not allowed.");
+      return;
+    }
+    expect(res.getStatus()).to.be.oneOf([200, 400, 404, 409]);
+    if (res.getStatus() === 200) {
+      expect(res.body.referrerCode).to.equal("ABCD2345");
+    }
+  });
+}
+
+docs {
+  Customer accounts only. Saves the code before the first order. The referrer is credited 100 when that order is placed, not when the code is saved.
+}

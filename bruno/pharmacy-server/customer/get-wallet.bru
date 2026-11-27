@@ -1,0 +1,37 @@
+meta {
+  name: Get wallet
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/v1/customer/wallet
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("a customer opens a wallet", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      expect(res.body.detail).to.equal("Sign in is required");
+      return;
+    }
+    if (res.getStatus() === 403) {
+      expect(res.body.detail).to.equal("This action is not allowed.");
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.body.balance).to.be.a("number");
+    expect(res.body.referralCode).to.be.a("string");
+  });
+}
+
+docs {
+  Customer accounts only. Opens a wallet with balance 0 and an 8-character referral code on first read. One credit is one rupee.
+}
