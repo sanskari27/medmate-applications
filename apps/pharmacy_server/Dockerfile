@@ -23,6 +23,7 @@ COPY pharmacy_server_prep/pom.xml pharmacy_server_prep/pom.xml
 COPY pharmacy_server_customer/pom.xml pharmacy_server_customer/pom.xml
 COPY pharmacy_server_coupons/pom.xml pharmacy_server_coupons/pom.xml
 COPY pharmacy_server_cart/pom.xml pharmacy_server_cart/pom.xml
+COPY pharmacy_server_care/pom.xml pharmacy_server_care/pom.xml
 COPY pharmacy_server_app/pom.xml pharmacy_server_app/pom.xml
 COPY pharmacy_server_shared/src pharmacy_server_shared/src
 COPY pharmacy_server_identity/src pharmacy_server_identity/src
@@ -46,6 +47,7 @@ COPY pharmacy_server_prep/src pharmacy_server_prep/src
 COPY pharmacy_server_customer/src pharmacy_server_customer/src
 COPY pharmacy_server_coupons/src pharmacy_server_coupons/src
 COPY pharmacy_server_cart/src pharmacy_server_cart/src
+COPY pharmacy_server_care/src pharmacy_server_care/src
 COPY pharmacy_server_app/src pharmacy_server_app/src
 
 FROM dev AS format
