@@ -1,10 +1,13 @@
 package in.medmate.pharmacy_server.customer.web;
 
 import in.medmate.pharmacy_server.customer.CustomerAccess;
+import in.medmate.pharmacy_server.customer.DeliveryChargePolicy;
 import in.medmate.pharmacy_server.customer.NearbyRules;
 import in.medmate.pharmacy_server.customer.store.NearbyStore;
 import in.medmate.pharmacy_server.identity.access.AccountPrincipal;
 import in.medmate.pharmacy_server.shared.error.ApiProblem;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
@@ -41,6 +44,8 @@ public class NearbyService {
 
     private static NearbyViews.PharmacyView view(NearbyStore.NearbyRow row, Instant now) {
         NearbyRules.HoursNow today = NearbyRules.today(row.openingHours(), now);
+        double distanceKm = Math.round(row.distanceKm() * 1000.0) / 1000.0;
+        DeliveryChargePolicy.Quote charge = DeliveryChargePolicy.quote(distanceKm);
         return new NearbyViews.PharmacyView(
                 row.pharmacyId(),
                 row.name(),
@@ -50,13 +55,18 @@ public class NearbyService {
                 row.pincode(),
                 row.latitude(),
                 row.longitude(),
-                Math.round(row.distanceKm() * 1000.0) / 1000.0,
+                distanceKm,
                 row.acceptOnlineOrders(),
                 row.licenceNumber(),
                 row.pharmacistName(),
                 row.openingHours(),
                 today.closed(),
-                today.closesOn());
+                today.closesOn(),
+                new NearbyViews.DeliveryCharge(money(charge.amount()), charge.distanceKm()));
+    }
+
+    private static String money(BigDecimal value) {
+        return value.setScale(2, RoundingMode.HALF_UP).toPlainString();
     }
 
     private static void requireCustomer(AccountPrincipal actor) {

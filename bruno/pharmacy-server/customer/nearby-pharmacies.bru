@@ -30,6 +30,8 @@ tests {
     expect(res.body.pharmacies).to.be.an("array");
     res.body.pharmacies.forEach(function(pharmacy) {
       expect(pharmacy.openingHours).to.be.an("array");
+      expect(pharmacy.deliveryCharge.amount).to.match(/^\d+\.\d{2}$/);
+      expect(pharmacy.deliveryCharge.distanceKm).to.equal(pharmacy.distanceKm);
       expect(pharmacy.closed).to.be.a("boolean");
       if (pharmacy.closed) {
         expect(pharmacy.closesOn).to.equal(null);
@@ -49,5 +51,7 @@ docs {
   Inside a window, closed is false and closesOn is that window's close time (HH:mm). At the close time the pharmacy is closed.
   The list is not filtered by whether the pharmacy is open now.
   Each pharmacy includes licenceNumber (drug licence) and pharmacistName.
+  Each pharmacy includes deliveryCharge. amount is 0.00 at 3 km or nearer and 20.00 beyond that.
+  distanceKm on the charge matches the pharmacy distance, rounded to 3 decimals.
   Limit defaults to 20 and caps at 50.
 }
