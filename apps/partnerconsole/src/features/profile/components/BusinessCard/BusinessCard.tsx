@@ -22,7 +22,9 @@ export function BusinessCard({
   onChange: (patch: Patch) => void;
 }) {
   const logo = documents.find((document) => document.slot === "logo");
+  const banner = documents.find((document) => document.slot === "banner");
   const logoFile = draft.files.logo instanceof File ? draft.files.logo : undefined;
+  const bannerFile = draft.files.banner instanceof File ? draft.files.banner : undefined;
   return (
     <Stack className={cardClass}>
       <CardTitle>Business</CardTitle>
@@ -56,6 +58,15 @@ export function BusinessCard({
           </Field>
         </Stack>
       </Stack>
+      <DocumentField
+        label="Store banner"
+        accept={IMAGE_ACCEPT}
+        file={bannerFile}
+        stored={Boolean(banner) && !draft.removeBanner}
+        contentType={banner?.contentType}
+        onFile={(file) => onChange({ removeBanner: false, files: { banner: file } })}
+        onRemove={() => onChange({ removeBanner: true, files: { banner: undefined } })}
+      />
       <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-6">
         <Field
           label="Company Phone Number"

@@ -67,6 +67,7 @@ public class NearbyService {
                 today.closesOn(),
                 new NearbyViews.DeliveryCharge(money(charge.amount()), charge.distanceKm()),
                 image(row.logoKey()),
+                image(row.bannerKey()),
                 NearbyRules.openAllHours(row.openingHours()));
     }
 

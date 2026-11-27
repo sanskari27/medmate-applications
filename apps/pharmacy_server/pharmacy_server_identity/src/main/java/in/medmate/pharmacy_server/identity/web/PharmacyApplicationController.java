@@ -142,7 +142,9 @@ public class PharmacyApplicationController {
             @RequestParam(required = false) String extraDetails,
             @RequestParam(required = false) String openingHours,
             @RequestParam(required = false, defaultValue = "false") boolean removeLogo,
+            @RequestParam(required = false, defaultValue = "false") boolean removeBanner,
             @RequestPart(required = false) MultipartFile logo,
+            @RequestPart(required = false) MultipartFile banner,
             @RequestPart(required = false) MultipartFile gstCertificate,
             @RequestPart(required = false) MultipartFile panCard,
             @RequestPart(required = false) MultipartFile drugLicence,
@@ -189,8 +191,9 @@ public class PharmacyApplicationController {
                 upload(logo),
                 phone,
                 extra.details(),
-                hours.hours());
-        return applications.updateProfile(Current.require(authentication), input, removeLogo);
+                hours.hours(),
+                upload(banner));
+        return applications.updateProfile(Current.require(authentication), input, removeLogo, removeBanner);
     }
 
     @GetMapping("/pharmacy/application")

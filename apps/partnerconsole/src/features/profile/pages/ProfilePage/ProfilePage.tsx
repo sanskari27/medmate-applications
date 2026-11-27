@@ -60,7 +60,7 @@ export function ProfilePage() {
         }),
       );
       if (saved.status === "approved") {
-        const next = { ...draft, removeLogo: false, files: {} };
+        const next = { ...draft, removeLogo: false, removeBanner: false, files: {} };
         setBaseline(next);
         setDraft(next);
       }

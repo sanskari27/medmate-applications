@@ -186,7 +186,8 @@ public final class PharmacyRules {
             Upload logo,
             String submittedPhone,
             List<ExtraDetail> extraDetails,
-            List<OpeningHour> openingHours) {}
+            List<OpeningHour> openingHours,
+            Upload banner) {}
 
     public static ExtraRead readExtra(String raw) {
         if (raw == null || raw.isBlank()) {
@@ -266,7 +267,11 @@ public final class PharmacyRules {
         if (extra != null) {
             return extra;
         }
-        return invalid(asApplication(input, preserved), accountPhone, storedSlots);
+        String problem = invalid(asApplication(input, preserved), accountPhone, storedSlots);
+        if (problem != null) {
+            return problem;
+        }
+        return file(input.banner(), "Banner", false, true, storedSlots.contains("banner"));
     }
 
     public static boolean needsReview(StoredLicences stored, ProfileInput input) {

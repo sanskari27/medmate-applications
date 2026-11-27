@@ -26,6 +26,7 @@ public final class NearbyViews {
             String closesOn,
             DeliveryCharge deliveryCharge,
             Image image,
+            Image banner,
             boolean openAllHours) {}
 
     public record DeliveryCharge(String amount, double distanceKm) {}

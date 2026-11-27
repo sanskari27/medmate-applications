@@ -175,6 +175,7 @@ class PharmacyRulesTest {
                 null,
                 null,
                 List.of(),
+                null,
                 null);
     }
 
@@ -222,7 +223,8 @@ class PharmacyRulesTest {
                 input.logo(),
                 input.submittedPhone(),
                 input.extraDetails(),
-                hours);
+                hours,
+                input.banner());
     }
 
     private static PharmacyRules.ProfileInput profileWithGstin(String gstin) {
@@ -260,7 +262,8 @@ class PharmacyRulesTest {
                 input.logo(),
                 input.submittedPhone(),
                 input.extraDetails(),
-                input.openingHours());
+                input.openingHours(),
+                input.banner());
     }
 
     private static PharmacyRules.ProfileInput profileWithPharmacist(String name) {
@@ -298,7 +301,8 @@ class PharmacyRulesTest {
                 input.logo(),
                 input.submittedPhone(),
                 input.extraDetails(),
-                input.openingHours());
+                input.openingHours(),
+                input.banner());
     }
 
     private static PharmacyRules.ProfileInput profileWithSignature(PharmacyRules.Upload signature) {
@@ -336,7 +340,8 @@ class PharmacyRulesTest {
                 input.logo(),
                 input.submittedPhone(),
                 input.extraDetails(),
-                input.openingHours());
+                input.openingHours(),
+                input.banner());
     }
 
     private static PharmacyRules.ProfileInput profileWithLogo(PharmacyRules.Upload logo) {
@@ -374,7 +379,8 @@ class PharmacyRulesTest {
                 logo,
                 input.submittedPhone(),
                 input.extraDetails(),
-                input.openingHours());
+                input.openingHours(),
+                input.banner());
     }
 
     private static PharmacyRules.ApplicationInput sample() {

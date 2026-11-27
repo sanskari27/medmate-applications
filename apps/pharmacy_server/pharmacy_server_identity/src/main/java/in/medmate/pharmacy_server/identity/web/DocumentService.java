@@ -18,7 +18,15 @@ import org.springframework.stereotype.Service;
 public class DocumentService {
 
     static final Set<String> SLOTS = Set.of(
-            "logo", "gst", "pan", "drug-licence", "fssai", "trade-licence", "pharmacist-certificate", "signature");
+            "logo",
+            "banner",
+            "gst",
+            "pan",
+            "drug-licence",
+            "fssai",
+            "trade-licence",
+            "pharmacist-certificate",
+            "signature");
 
     private final PharmacyStore pharmacies;
     private final DocumentStore documents;

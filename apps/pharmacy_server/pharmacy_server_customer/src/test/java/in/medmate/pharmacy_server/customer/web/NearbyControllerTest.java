@@ -77,6 +77,7 @@ class NearbyControllerTest {
     @Test
     void aCustomerReceivesNearestPharmaciesFirst() throws Exception {
         when(documents.url("logos/care")).thenReturn("https://files.example/care.png");
+        when(documents.url("banners/care")).thenReturn("https://files.example/care-banner.png");
         when(store.nearby(12.9716, 77.5946, 20, NearbyRules.MAX_DISTANCE_KM))
                 .thenReturn(List.of(
                         row(
@@ -84,14 +85,16 @@ class NearbyControllerTest {
                                 "Care Pharmacy",
                                 0.4,
                                 "logos/care",
+                                "banners/care",
                                 List.of(
                                         new PharmacyRules.OpeningHour("monday", false, "09:00", "13:00"),
                                         new PharmacyRules.OpeningHour("monday", false, "16:00", "21:00"))),
-                        row(FAR, "Sri Sai Medicals", 3.2, null, List.of()),
+                        row(FAR, "Sri Sai Medicals", 3.2, null, null, List.of()),
                         row(
                                 SHUT,
                                 "Morning Medicals",
                                 4.1,
+                                null,
                                 null,
                                 List.of(new PharmacyRules.OpeningHour("monday", false, "09:00", "12:00")))));
         mvc.perform(get("/api/v1/customer/pharmacies/nearby")
@@ -114,8 +117,10 @@ class NearbyControllerTest {
                 .andExpect(jsonPath("$.pharmacies[0].deliveryCharge.amount").value("0.00"))
                 .andExpect(jsonPath("$.pharmacies[0].deliveryCharge.distanceKm").value(0.4))
                 .andExpect(jsonPath("$.pharmacies[0].image.url").value("https://files.example/care.png"))
+                .andExpect(jsonPath("$.pharmacies[0].banner.url").value("https://files.example/care-banner.png"))
                 .andExpect(jsonPath("$.pharmacies[0].openAllHours").value(false))
                 .andExpect(jsonPath("$.pharmacies[1].image").value(nullValue()))
+                .andExpect(jsonPath("$.pharmacies[1].banner").value(nullValue()))
                 .andExpect(jsonPath("$.pharmacies[1].openAllHours").value(false))
                 .andExpect(jsonPath("$.pharmacies[1].openingHours").isEmpty())
                 .andExpect(jsonPath("$.pharmacies[1].closed").value(true))
@@ -140,7 +145,12 @@ class NearbyControllerTest {
     }
 
     private static NearbyStore.NearbyRow row(
-            UUID id, String name, double distanceKm, String logoKey, List<PharmacyRules.OpeningHour> openingHours) {
+            UUID id,
+            String name,
+            double distanceKm,
+            String logoKey,
+            String bannerKey,
+            List<PharmacyRules.OpeningHour> openingHours) {
         return new NearbyStore.NearbyRow(
                 id,
                 name,
@@ -155,6 +165,7 @@ class NearbyControllerTest {
                 "KA-BLR-20B-12345",
                 "Asha Rao",
                 logoKey,
+                bannerKey,
                 openingHours);
     }
 

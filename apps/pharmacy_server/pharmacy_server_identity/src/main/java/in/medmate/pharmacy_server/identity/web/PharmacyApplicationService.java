@@ -81,7 +81,7 @@ public class PharmacyApplicationService {
 
     @Transactional
     public VerificationResponse updateProfile(
-            AccountPrincipal actor, PharmacyRules.ProfileInput input, boolean removeLogo) {
+            AccountPrincipal actor, PharmacyRules.ProfileInput input, boolean removeLogo, boolean removeBanner) {
         if (actor.accountType() != AccountType.PHARMACY || actor.pharmacyRole() != PharmacyRole.OWNER) {
             throw new ApiProblem(HttpStatus.FORBIDDEN, "Forbidden", "Only the pharmacy owner can update the profile");
         }
@@ -98,6 +98,9 @@ public class PharmacyApplicationService {
         Set<String> slots = new LinkedHashSet<>(pharmacies.storedSlots(row.id()));
         if (removeLogo && !present(input.logo())) {
             slots.remove("logo");
+        }
+        if (removeBanner && !present(input.banner())) {
+            slots.remove("banner");
         }
         PharmacyRules.Preserved preserved = new PharmacyRules.Preserved(
                 row.pharmacyType(),
@@ -122,6 +125,9 @@ public class PharmacyApplicationService {
         replaceProfileDocuments(row.id(), input);
         if (removeLogo && !present(input.logo())) {
             removeDocument(row.id(), "logo");
+        }
+        if (removeBanner && !present(input.banner())) {
+            removeDocument(row.id(), "banner");
         }
         accounts.updateDisplayName(actor.id(), input.name().trim());
         if (review) {
@@ -168,6 +174,7 @@ public class PharmacyApplicationService {
 
     private void replaceProfileDocuments(UUID pharmacyId, PharmacyRules.ProfileInput input) {
         put(pharmacyId, "logo", input.logo());
+        put(pharmacyId, "banner", input.banner());
         put(pharmacyId, "gst", input.gst());
         put(pharmacyId, "pan", input.panCard());
         put(pharmacyId, "drug-licence", input.drugLicence());

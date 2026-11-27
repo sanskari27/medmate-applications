@@ -9,6 +9,7 @@ import type { VerificationStatus } from "@/types";
 
 export const DOCUMENT_SLOTS = [
   "logo",
+  "banner",
   "gst",
   "pan",
   "drug-licence",
@@ -31,6 +32,7 @@ const REVIEW_SLOTS: DocumentSlot[] = [
 
 const FILE_PARTS: Record<DocumentSlot, string> = {
   logo: "logo",
+  banner: "banner",
   gst: "gstCertificate",
   pan: "panCard",
   "drug-licence": "drugLicence",
@@ -104,6 +106,7 @@ export type ProfileForm = {
   openingHours: OpeningHour[];
   includeOpeningHours: boolean;
   removeLogo: boolean;
+  removeBanner: boolean;
   files: Partial<Record<DocumentSlot, File | undefined>>;
 };
 
@@ -147,6 +150,7 @@ export function formFromApplication(application: ProfileApplication): ProfileFor
     openingHours: openingHours ?? closedWeek(),
     includeOpeningHours: openingHours != null,
     removeLogo: false,
+    removeBanner: false,
     files: {},
   };
 }
@@ -168,6 +172,7 @@ export function needsReview(baseline: ProfileForm, draft: ProfileForm): boolean 
 
 export function isDirty(baseline: ProfileForm, draft: ProfileForm): boolean {
   if (baseline.removeLogo !== draft.removeLogo) return true;
+  if (baseline.removeBanner !== draft.removeBanner) return true;
   if (DOCUMENT_SLOTS.some((slot) => draft.files[slot] instanceof File)) return true;
   return JSON.stringify(snapshot(baseline)) !== JSON.stringify(snapshot(draft));
 }
@@ -209,6 +214,7 @@ export function toFormData(draft: ProfileForm): FormData {
     body.set("openingHours", JSON.stringify(serializeOpeningHours(draft.openingHours)));
   }
   body.set("removeLogo", String(draft.removeLogo && !(draft.files.logo instanceof File)));
+  body.set("removeBanner", String(draft.removeBanner && !(draft.files.banner instanceof File)));
   for (const slot of DOCUMENT_SLOTS) {
     if (slot === "signature") continue;
     const file = draft.files[slot];

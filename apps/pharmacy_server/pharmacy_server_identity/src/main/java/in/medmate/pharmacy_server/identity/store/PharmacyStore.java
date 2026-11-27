@@ -27,7 +27,15 @@ public class PharmacyStore {
 
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final List<String> SLOT_ORDER = List.of(
-            "logo", "gst", "pan", "drug-licence", "fssai", "trade-licence", "pharmacist-certificate", "signature");
+            "logo",
+            "banner",
+            "gst",
+            "pan",
+            "drug-licence",
+            "fssai",
+            "trade-licence",
+            "pharmacist-certificate",
+            "signature");
 
     private final JdbcClient jdbc;
 
