@@ -1,5 +1,6 @@
 package in.medmate.pharmacy_server.stock.web;
 
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -9,9 +10,11 @@ import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -269,8 +272,78 @@ class StockControllerTest {
                 .andExpect(jsonPath("$.product.rackAlt").value("C2"));
     }
 
+    @Test
+    void updateIsRequiredToSetAnOnlinePrice() throws Exception {
+        mvc.perform(put("/pharmacy/inventory/DR100/online-price")
+                        .principal(staff("inventory:read"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"onlineMrp\":\"120.00\",\"onlinePrice\":\"99.00\"}"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.detail").value("Inventory cannot be updated"));
+        verify(stock, never()).updateOnlinePrice(any(), any(), any(), any());
+    }
+
+    @Test
+    void anOnlinePriceAboveMrpIsRejected() throws Exception {
+        mvc.perform(put("/pharmacy/inventory/DR100/online-price")
+                        .principal(staff("inventory:update"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"onlineMrp\":\"90.00\",\"onlinePrice\":\"99.00\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("Online price cannot exceed online MRP"));
+        verify(stock, never()).updateOnlinePrice(any(), any(), any(), any());
+    }
+
+    @Test
+    void settingAnOnlinePriceReturnsTheProduct() throws Exception {
+        StockStore.ProductRow saved = priced("120.00", "99.00");
+        Mockito.when(stock.updateOnlinePrice(eq(PHARMACY), eq("DR100"), any(), any()))
+                .thenReturn(1);
+        Mockito.when(stock.product(PHARMACY, "DR100")).thenReturn(Optional.of(saved));
+        Mockito.when(stock.batches(PHARMACY)).thenReturn(List.of());
+
+        mvc.perform(put("/pharmacy/inventory/DR100/online-price")
+                        .principal(staff("inventory:update"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"onlineMrp\":\"120.00\",\"onlinePrice\":\"99.00\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.product.onlineMrp").value("120.00"))
+                .andExpect(jsonPath("$.product.onlinePrice").value("99.00"));
+    }
+
+    @Test
+    void clearingAnOnlinePriceReturnsNullPrices() throws Exception {
+        StockStore.ProductRow cleared = product("A1", null);
+        Mockito.when(stock.clearOnlinePrice(PHARMACY, "DR100")).thenReturn(1);
+        Mockito.when(stock.product(PHARMACY, "DR100")).thenReturn(Optional.of(cleared));
+        Mockito.when(stock.batches(PHARMACY)).thenReturn(List.of());
+
+        mvc.perform(delete("/pharmacy/inventory/DR100/online-price").principal(staff("inventory:update")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.product.onlineMrp").value(nullValue()))
+                .andExpect(jsonPath("$.product.onlinePrice").value(nullValue()));
+    }
+
     private static StockStore.ProductRow product(String rack, String rackAlt) {
-        return new StockStore.ProductRow("DR100", "Crocin", null, null, null, null, null, 20, rack, rackAlt, false);
+        return new StockStore.ProductRow(
+                "DR100", "Crocin", null, null, null, null, null, 20, rack, rackAlt, false, null, null);
+    }
+
+    private static StockStore.ProductRow priced(String onlineMrp, String onlinePrice) {
+        return new StockStore.ProductRow(
+                "DR100",
+                "Crocin",
+                null,
+                null,
+                null,
+                null,
+                null,
+                20,
+                null,
+                null,
+                false,
+                new BigDecimal(onlineMrp),
+                new BigDecimal(onlinePrice));
     }
 
     private static AccountAuthentication staff(String... keys) {

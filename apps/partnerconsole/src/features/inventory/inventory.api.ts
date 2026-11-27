@@ -1,5 +1,5 @@
-import { createApi } from "@reduxjs/toolkit/query/react";
 import { apiClient } from "@/services/api";
+import { createApi } from "@reduxjs/toolkit/query/react";
 import type { InventoryList, InventoryProduct } from "./model";
 
 export type InventoryQuery = {
@@ -48,6 +48,24 @@ export const inventoryApi = createApi({
       }),
       invalidatesTags: ["Inventory"],
     }),
+    setOnlinePrice: build.mutation<
+      { product: InventoryProduct },
+      { productId: string; onlineMrp: string; onlinePrice: string }
+    >({
+      query: ({ productId, onlineMrp, onlinePrice }) => ({
+        url: `/pharmacy/inventory/${encodeURIComponent(productId)}/online-price`,
+        method: "PUT",
+        body: { onlineMrp, onlinePrice },
+      }),
+      invalidatesTags: ["Inventory"],
+    }),
+    clearOnlinePrice: build.mutation<{ product: InventoryProduct }, string>({
+      query: (productId) => ({
+        url: `/pharmacy/inventory/${encodeURIComponent(productId)}/online-price`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Inventory"],
+    }),
   }),
 });
 
@@ -56,4 +74,6 @@ export const {
   useLazyListInventoryQuery,
   useUpdateReorderMutation,
   useSetLocationMutation,
+  useSetOnlinePriceMutation,
+  useClearOnlinePriceMutation,
 } = inventoryApi;

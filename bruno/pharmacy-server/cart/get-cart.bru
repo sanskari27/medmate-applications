@@ -1,0 +1,22 @@
+meta {
+  name: Get cart
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/customer/cart
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+docs {
+  Customer accounts only. Groups cart lines onto as few pharmacies as possible within 40 km of the selected address.
+  The nearer pharmacy wins a tie. Every other in-range pharmacy that can fill a line is listed with its online MRP and online price.
+  An attached coupon is quoted separately for each pharmacy group.
+}

@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { isLow, isOut, tableComposition, type InventoryProduct } from "./model";
+import {
+  inventoryCsv,
+  isLow,
+  isOut,
+  onlinePriceProblem,
+  tableComposition,
+  type InventoryProduct,
+} from "./model";
 
 function product(batches: InventoryProduct["batches"], reorderLevel = 20): InventoryProduct {
   return {
@@ -51,5 +58,17 @@ describe("inventory stock rules", () => {
     expect(tableComposition(full)?.endsWith("…")).toBe(false);
     expect(tableComposition("Paracetamol 500 mg")).toBe("Paracetamol 500 mg");
     expect(tableComposition(null)).toBeNull();
+  });
+
+  it("accepts an online price at or under the online MRP", () => {
+    expect(onlinePriceProblem("120.00", "99")).toBeNull();
+    expect(onlinePriceProblem("90", "99")).toBe("Online price cannot exceed online MRP");
+    expect(onlinePriceProblem("", "10")).toBe("Online MRP is not valid");
+    const row = inventoryCsv([
+      product([{ batchNo: "B", expiry: "2027-03", qty: 1, rate: "10.00", mrp: "18.00" }], 20),
+    ]);
+    expect(row.split("\n")[0]).toBe(
+      "Product,Type,Batches,Expiry,Stock,MRP,Online MRP,Online price,Value",
+    );
   });
 });

@@ -12,6 +12,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import in.medmate.pharmacy_server.catalog.CatalogDocuments;
 import in.medmate.pharmacy_server.catalog.CatalogStore;
+import in.medmate.pharmacy_server.customer.store.AddressStore;
+import in.medmate.pharmacy_server.customer.store.NearbyStore;
 import in.medmate.pharmacy_server.identity.access.AccountAuthentication;
 import in.medmate.pharmacy_server.identity.access.AccountPrincipal;
 import in.medmate.pharmacy_server.identity.access.AccountType;
@@ -24,6 +26,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -38,14 +41,17 @@ class CustomerCatalogControllerTest {
 
     private final CatalogStore catalog = Mockito.mock(CatalogStore.class);
     private final StockStore stock = Mockito.mock(StockStore.class);
+    private final AddressStore addresses = Mockito.mock(AddressStore.class);
+    private final NearbyStore nearby = Mockito.mock(NearbyStore.class);
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(new CustomerCatalogController(
-                    new CustomerCatalogService(catalog, stock, Clock.fixed(NOW, ZoneOffset.UTC))))
+                    new CustomerCatalogService(catalog, stock, addresses, nearby, Clock.fixed(NOW, ZoneOffset.UTC))))
             .setControllerAdvice(new ApiExceptionHandler())
             .build();
 
     @Test
     void onlyACustomerCanListAvailableProducts() throws Exception {
         when(stock.availableProductIds("2026-11")).thenReturn(List.of("IN1"));
+        when(addresses.selected(CUSTOMER)).thenReturn(Optional.empty());
         when(catalog.available(anyList(), eq("Pain"), eq("Crocin"), eq(1), eq(25)))
                 .thenReturn(new CatalogDocuments.AvailablePage(
                         List.of(new CatalogDocuments.AvailableItem(

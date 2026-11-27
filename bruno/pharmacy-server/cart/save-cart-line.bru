@@ -1,0 +1,28 @@
+meta {
+  name: Save cart line
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/api/v1/customer/cart/lines
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "productId": "DR100",
+    "qty": 1
+  }
+}
+
+docs {
+  Customer accounts only. Adds the product or replaces its quantity. Quantity is from 1 to 99.
+}

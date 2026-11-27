@@ -4,6 +4,7 @@ public final class NearbyRules {
 
     public static final int DEFAULT_LIMIT = 20;
     public static final int MAX_LIMIT = 50;
+    public static final double MAX_DISTANCE_KM = 40;
 
     private NearbyRules() {}
 

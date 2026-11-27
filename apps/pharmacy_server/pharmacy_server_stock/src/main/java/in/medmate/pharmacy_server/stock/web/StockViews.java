@@ -62,6 +62,8 @@ public final class StockViews {
             String rack,
             String rackAlt,
             Boolean prescriptionRequired,
+            String onlineMrp,
+            String onlinePrice,
             List<BatchView> batches) {}
 
     public record InventorySummary(

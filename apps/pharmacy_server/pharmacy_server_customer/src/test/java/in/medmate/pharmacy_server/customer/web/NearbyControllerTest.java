@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import in.medmate.pharmacy_server.customer.NearbyRules;
 import in.medmate.pharmacy_server.customer.store.NearbyStore;
 import in.medmate.pharmacy_server.identity.access.AccountAuthentication;
 import in.medmate.pharmacy_server.identity.access.AccountPrincipal;
@@ -54,12 +55,12 @@ class NearbyControllerTest {
                         .param("longitude", "77.59"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value("Latitude is required"));
-        verify(store, never()).nearby(anyDouble(), anyDouble(), anyInt());
+        verify(store, never()).nearby(anyDouble(), anyDouble(), anyInt(), anyDouble());
     }
 
     @Test
     void aCustomerReceivesNearestPharmaciesFirst() throws Exception {
-        when(store.nearby(12.9716, 77.5946, 20))
+        when(store.nearby(12.9716, 77.5946, 20, NearbyRules.MAX_DISTANCE_KM))
                 .thenReturn(List.of(row(NEAR, "Care Pharmacy", 0.4), row(FAR, "Sri Sai Medicals", 3.2)));
         mvc.perform(get("/api/v1/customer/pharmacies/nearby")
                         .principal(customer())
@@ -73,7 +74,7 @@ class NearbyControllerTest {
                 .andExpect(jsonPath("$.pharmacies[1].name").value("Sri Sai Medicals"))
                 .andExpect(jsonPath("$.pharmacies[1].distanceKm").value(3.2));
 
-        when(store.nearby(12.9716, 77.5946, 50)).thenReturn(List.of());
+        when(store.nearby(12.9716, 77.5946, 50, NearbyRules.MAX_DISTANCE_KM)).thenReturn(List.of());
         mvc.perform(get("/api/v1/customer/pharmacies/nearby")
                         .principal(customer())
                         .param("latitude", "12.9716")
@@ -81,7 +82,7 @@ class NearbyControllerTest {
                         .param("limit", "80"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.pharmacies").isEmpty());
-        verify(store).nearby(12.9716, 77.5946, 50);
+        verify(store).nearby(12.9716, 77.5946, 50, NearbyRules.MAX_DISTANCE_KM);
     }
 
     private static NearbyStore.NearbyRow row(UUID id, String name, double distanceKm) {

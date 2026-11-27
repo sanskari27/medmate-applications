@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { createAppStore } from "@/app/store";
 import { writeSession } from "@/services/storage";
 import type { Session } from "@/types";
+import type { InventoryProduct } from "../../model";
 import { InventoryPage } from "./InventoryPage";
 
 const session: Session = {
@@ -28,7 +29,7 @@ const session: Session = {
 
 const longComposition = "Paracetamol 500 mg, Phenylephrine hydrochloride 10 mg, extra";
 
-const inventory = {
+const inventory: { products: InventoryProduct[] } = {
   products: [
     {
       productId: "DR100",
@@ -89,6 +90,7 @@ const inventory = {
 };
 
 const locationCalls: { method: string; body: string }[] = [];
+const onlineCalls: { method: string; body: string }[] = [];
 const requested: string[] = [];
 
 function json(body: unknown) {
@@ -107,6 +109,13 @@ function renderPage(permissions: string[] = ["inventory:read"]) {
       requested.push(request.url);
       if (request.url.includes("/location")) {
         locationCalls.push({ method: request.method, body: await request.clone().text() });
+        return json({ product: inventory.products[0] });
+      }
+      if (request.url.includes("/online-price")) {
+        onlineCalls.push({
+          method: request.method,
+          body: request.method === "DELETE" ? "" : await request.clone().text(),
+        });
         return json({ product: inventory.products[0] });
       }
       if (request.url.includes("/pharmacy/purchases")) {
@@ -156,6 +165,7 @@ describe("InventoryPage", () => {
     cleanup();
     sessionStorage.clear();
     locationCalls.length = 0;
+    onlineCalls.length = 0;
     requested.length = 0;
     vi.unstubAllGlobals();
   });
@@ -243,5 +253,52 @@ describe("InventoryPage", () => {
         },
       ]),
     );
+  });
+
+  it("shows the online column and keeps the price read-only without inventory:update", async () => {
+    inventory.products[1].onlineMrp = "100.00";
+    inventory.products[1].onlinePrice = "90.00";
+    renderPage(["inventory:read"]);
+    expect(await screen.findByRole("columnheader", { name: "Online" })).toBeTruthy();
+    expect(screen.getByText("₹90")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Crocin Advance" }));
+    expect(screen.getByText("Not listed online")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Save online price" })).toBeNull();
+    delete inventory.products[1].onlineMrp;
+    delete inventory.products[1].onlinePrice;
+  });
+
+  it("saves and clears an online price with inventory:update", async () => {
+    inventory.products[0].onlineMrp = "120.00";
+    inventory.products[0].onlinePrice = "99.00";
+    renderPage(["inventory:update"]);
+    fireEvent.click(await screen.findByRole("button", { name: "Crocin Advance" }));
+    expect(screen.getByRole("button", { name: "Clear online price" })).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("Online MRP"), { target: { value: "150" } });
+    fireEvent.change(screen.getByLabelText("Online price"), { target: { value: "140.5" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save online price" }));
+    await waitFor(() =>
+      expect(onlineCalls[0]).toEqual({
+        method: "PUT",
+        body: JSON.stringify({ onlineMrp: "150.00", onlinePrice: "140.50" }),
+      }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Clear online price" }));
+    await waitFor(() => expect(onlineCalls.some((call) => call.method === "DELETE")).toBe(true));
+    delete inventory.products[0].onlineMrp;
+    delete inventory.products[0].onlinePrice;
+  });
+
+  it("refuses an online price above the online MRP", async () => {
+    renderPage(["inventory:update"]);
+    fireEvent.click(await screen.findByRole("button", { name: "Crocin Advance" }));
+    fireEvent.change(screen.getByLabelText("Online MRP"), { target: { value: "90" } });
+    fireEvent.change(screen.getByLabelText("Online price"), { target: { value: "99" } });
+    fireEvent.blur(screen.getByLabelText("Online price"));
+    expect(screen.getByRole("alert").textContent).toBe("Online price cannot exceed online MRP");
+    expect(
+      (screen.getByRole("button", { name: "Save online price" }) as HTMLButtonElement).disabled,
+    ).toBe(true);
+    expect(onlineCalls).toEqual([]);
   });
 });

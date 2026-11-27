@@ -59,6 +59,13 @@ public class AddressStore {
                 .list();
     }
 
+    public Optional<AddressRow> selected(UUID accountId) {
+        return jdbc.sql(select() + " WHERE account_id = :account AND selected")
+                .param("account", accountId)
+                .query(AddressStore::row)
+                .optional();
+    }
+
     public Optional<AddressRow> find(UUID accountId, UUID id) {
         return jdbc.sql(select() + " WHERE account_id = :account AND id = :id")
                 .param("account", accountId)

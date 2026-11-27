@@ -8,10 +8,12 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -81,6 +83,17 @@ public class StockController {
     public StockViews.InventoryOne reorder(
             Authentication authentication, @PathVariable String productId, @RequestBody JsonNode body) {
         return stock.reorder(Current.require(authentication), productId, body);
+    }
+
+    @PutMapping("/pharmacy/inventory/{productId}/online-price")
+    public StockViews.InventoryOne onlinePrice(
+            Authentication authentication, @PathVariable String productId, @RequestBody JsonNode body) {
+        return stock.onlinePrice(Current.require(authentication), productId, body);
+    }
+
+    @DeleteMapping("/pharmacy/inventory/{productId}/online-price")
+    public StockViews.InventoryOne clearOnlinePrice(Authentication authentication, @PathVariable String productId) {
+        return stock.clearOnlinePrice(Current.require(authentication), productId);
     }
 
     @GetMapping("/pharmacy/racks")

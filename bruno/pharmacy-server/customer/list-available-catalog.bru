@@ -35,4 +35,8 @@ tests {
 docs {
   Customer accounts only. A product is included when some pharmacy has a positive, unexpired batch.
   category and q are optional. Each item has productId, name, displayName, price, image, and rxRequired.
+  price is the national catalog MRP. When the selected address has an approved pharmacy within 40 km
+  that accepts online orders and has set an online price, the item also has pharmacyId, pharmacyName,
+  distanceKm, onlineMrp, onlinePrice, and deliveryCharge. deliveryCharge.amount is 0.00 until the
+  distance formula is configured. Those fields are null when no listing is in range.
 }

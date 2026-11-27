@@ -22,6 +22,8 @@ import {
   inr,
   inventoryAccess,
   inventoryCsv,
+  onlineAmounts,
+  onlinePriceProblem,
   isExpiring,
   isLow,
   isOut,
@@ -35,9 +37,11 @@ import {
   type InventoryProduct,
 } from "../../model";
 import {
+  useClearOnlinePriceMutation,
   useLazyListInventoryQuery,
   useListInventoryQuery,
   useSetLocationMutation,
+  useSetOnlinePriceMutation,
 } from "../../inventory.api";
 
 const headCell =
@@ -197,19 +201,28 @@ export function InventoryPage() {
           <table className="w-full border-separate border-spacing-0 text-[13px] [&_tbody_tr:last-child_td]:border-b-0">
             <thead>
               <tr>
-                {["Product", "Location", "Type", "Batches", "Expiry", "Stock", "MRP", "Value"].map(
-                  (heading) => (
-                    <th
-                      key={heading}
-                      className={cn(
-                        headCell,
-                        ["Batches", "Stock", "MRP", "Value"].includes(heading) && "text-right",
-                      )}
-                    >
-                      {heading}
-                    </th>
-                  ),
-                )}
+                {[
+                  "Product",
+                  "Location",
+                  "Type",
+                  "Batches",
+                  "Expiry",
+                  "Stock",
+                  "MRP",
+                  "Online",
+                  "Value",
+                ].map((heading) => (
+                  <th
+                    key={heading}
+                    className={cn(
+                      headCell,
+                      ["Batches", "Stock", "MRP", "Online", "Value"].includes(heading) &&
+                        "text-right",
+                    )}
+                  >
+                    {heading}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
@@ -268,6 +281,14 @@ export function InventoryPage() {
                         "text-right font-semibold whitespace-nowrap tabular-nums",
                       )}
                     >
+                      {product.onlinePrice ? inr(Number(product.onlinePrice)) : "—"}
+                    </td>
+                    <td
+                      className={cn(
+                        bodyCell,
+                        "text-right font-semibold whitespace-nowrap tabular-nums",
+                      )}
+                    >
                       {inr(cost(product))}
                     </td>
                   </tr>
@@ -275,7 +296,7 @@ export function InventoryPage() {
               })}
               {products.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className={bodyCell}>
+                  <td colSpan={9} className={bodyCell}>
                     <Text className="px-3.5 py-8 text-center text-[13px] text-muted">
                       No products match this filter.
                     </Text>
@@ -344,11 +365,20 @@ export function ProductDialog({
   const canPlace =
     session?.account.pharmacyRole === "owner" ||
     (session?.account.permissions ?? []).includes("racks:update");
+  const canPrice = inventoryAccess(
+    session?.account.pharmacyRole,
+    session?.account.permissions,
+  ).update;
   const [tab, setTab] = useState<"details" | "batches">("details");
   const [historyPage, setHistoryPage] = useState(1);
   const [rack, setRack] = useState(product?.rack ?? "");
   const [alt, setAlt] = useState(product?.rackAlt ?? "");
+  const [onlineMrp, setOnlineMrp] = useState(product?.onlineMrp ?? "");
+  const [onlinePrice, setOnlinePrice] = useState(product?.onlinePrice ?? "");
+  const [priceTouched, setPriceTouched] = useState(false);
   const [setLocation, locationState] = useSetLocationMutation();
+  const [saveOnlinePrice, onlineState] = useSetOnlinePriceMutation();
+  const [clearOnlinePrice, clearState] = useClearOnlinePriceMutation();
   const history = useListPurchasesQuery(
     { productId: product?.productId, page: historyPage, size: 25 },
     { skip: !product || tab !== "batches" },
@@ -360,9 +390,15 @@ export function ProductDialog({
   useEffect(() => {
     setRack(product?.rack ?? "");
     setAlt(product?.rackAlt ?? "");
+    setOnlineMrp(product?.onlineMrp ?? "");
+    setOnlinePrice(product?.onlinePrice ?? "");
+    setPriceTouched(false);
     setHistoryPage(1);
   }, [product]);
   if (!product) return null;
+  const priceProblem = onlinePriceProblem(onlineMrp, onlinePrice);
+  const priceError = priceTouched ? priceProblem : null;
+  const listed = Boolean(product.onlineMrp && product.onlinePrice);
   const stock = units(product);
   const purchases = history.data?.purchases ?? [];
   const expiry = nearestExpiry(product);
@@ -490,6 +526,110 @@ export function ProductDialog({
                       </Box>
                     ) : (
                       locationLabel(product)
+                    )}
+                  </td>
+                </tr>
+                <tr className="transition-colors duration-100 hover:bg-wash-2">
+                  <td className={cn(bodyCell, "w-[180px] font-semibold text-muted")}>
+                    Online price
+                  </td>
+                  <td className={cn(bodyCell, "font-semibold text-ink")}>
+                    {canPrice ? (
+                      <form
+                        aria-label="Set online price"
+                        className="flex flex-wrap items-end gap-2"
+                        onSubmit={(event) => {
+                          event.preventDefault();
+                          setPriceTouched(true);
+                          if (priceProblem || onlineState.isLoading) return;
+                          const amounts = onlineAmounts(onlineMrp, onlinePrice);
+                          void saveOnlinePrice({
+                            productId: product.productId,
+                            onlineMrp: amounts.onlineMrp,
+                            onlinePrice: amounts.onlinePrice,
+                          }).catch(() => undefined);
+                        }}
+                      >
+                        <label className="flex flex-col gap-1 text-[12px] font-semibold text-muted">
+                          Online MRP
+                          <Input
+                            name="onlineMrp"
+                            inputMode="decimal"
+                            autoComplete="off"
+                            autoCorrect="off"
+                            spellCheck={false}
+                            required
+                            aria-invalid={priceError ? true : undefined}
+                            aria-describedby={priceError ? "online-price-error" : undefined}
+                            value={onlineMrp}
+                            onChange={(event) => setOnlineMrp(event.target.value)}
+                            onBlur={() => setPriceTouched(true)}
+                            placeholder="120.00"
+                            className="w-[110px] font-mono"
+                          />
+                        </label>
+                        <label className="flex flex-col gap-1 text-[12px] font-semibold text-muted">
+                          Online price
+                          <Input
+                            name="onlinePrice"
+                            inputMode="decimal"
+                            autoComplete="off"
+                            autoCorrect="off"
+                            spellCheck={false}
+                            required
+                            aria-invalid={priceError ? true : undefined}
+                            aria-describedby={priceError ? "online-price-error" : undefined}
+                            value={onlinePrice}
+                            onChange={(event) => setOnlinePrice(event.target.value)}
+                            onBlur={() => setPriceTouched(true)}
+                            placeholder="99.00"
+                            className="w-[110px] font-mono"
+                          />
+                        </label>
+                        <Button
+                          type="submit"
+                          size="md"
+                          disabled={priceProblem !== null || onlineState.isLoading}
+                        >
+                          Save online price
+                        </Button>
+                        {listed ? (
+                          <Button
+                            type="button"
+                            size="md"
+                            variant="ghost"
+                            disabled={clearState.isLoading}
+                            onClick={() => {
+                              void clearOnlinePrice(product.productId).catch(() => undefined);
+                            }}
+                          >
+                            Clear online price
+                          </Button>
+                        ) : null}
+                        {priceError ? (
+                          <Text
+                            id="online-price-error"
+                            role="alert"
+                            className="text-[12.5px] text-rose"
+                          >
+                            {priceError}
+                          </Text>
+                        ) : null}
+                        {onlineState.isError || clearState.isError ? (
+                          <Text className="text-[12.5px] text-rose">
+                            {problemMessage(
+                              onlineState.isError ? onlineState.error : clearState.error,
+                              "Could not save the online price",
+                            )}
+                          </Text>
+                        ) : null}
+                      </form>
+                    ) : listed ? (
+                      <Text>
+                        {inr(Number(product.onlinePrice))} · MRP {inr(Number(product.onlineMrp))}
+                      </Text>
+                    ) : (
+                      <Text>Not listed online</Text>
                     )}
                   </td>
                 </tr>

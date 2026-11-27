@@ -275,6 +275,28 @@ public class StockService {
         return loadedProduct(actor.pharmacyId(), productId);
     }
 
+    @Transactional
+    public StockViews.InventoryOne onlinePrice(AccountPrincipal actor, String productId, JsonNode body) {
+        require(actor, InventoryRules.UPDATE, "Inventory cannot be updated");
+        InventoryRules.OnlinePrice price = InventoryRules.onlinePrice(body);
+        if (price.problem() != null) {
+            throw bad(price.problem());
+        }
+        if (stock.updateOnlinePrice(actor.pharmacyId(), productId, price.onlineMrp(), price.onlinePrice()) == 0) {
+            throw missingProduct();
+        }
+        return loadedProduct(actor.pharmacyId(), productId);
+    }
+
+    @Transactional
+    public StockViews.InventoryOne clearOnlinePrice(AccountPrincipal actor, String productId) {
+        require(actor, InventoryRules.UPDATE, "Inventory cannot be updated");
+        if (stock.clearOnlinePrice(actor.pharmacyId(), productId) == 0) {
+            throw missingProduct();
+        }
+        return loadedProduct(actor.pharmacyId(), productId);
+    }
+
     public StockViews.RackList racks(AccountPrincipal actor) {
         require(actor, RackRules.READ, "Racks cannot be read");
         return rackList(actor.pharmacyId());
@@ -740,6 +762,8 @@ public class StockService {
                 product.rack(),
                 product.rackAlt(),
                 product.prescriptionRequired(),
+                money(product.onlineMrp()),
+                money(product.onlinePrice()),
                 views);
     }
 
@@ -788,6 +812,9 @@ public class StockService {
     }
 
     private static String money(BigDecimal value) {
+        if (value == null) {
+            return null;
+        }
         return value.setScale(2, RoundingMode.HALF_UP).toPlainString();
     }
 

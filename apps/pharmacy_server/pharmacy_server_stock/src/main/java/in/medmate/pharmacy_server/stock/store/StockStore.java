@@ -10,6 +10,7 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -64,10 +65,15 @@ public class StockStore {
             int reorderLevel,
             String rack,
             String rackAlt,
-            Boolean prescriptionRequired) {}
+            Boolean prescriptionRequired,
+            BigDecimal onlineMrp,
+            BigDecimal onlinePrice) {}
 
     public record BatchRow(
             String productId, String batchNo, String expiry, int qty, BigDecimal rate, BigDecimal mrp, Integer gst) {}
+
+    public record OnlineListing(
+            UUID pharmacyId, String productId, BigDecimal onlineMrp, BigDecimal onlinePrice, int availableQty) {}
 
     public List<String> availableProductIds(String currentMonth) {
         return jdbc.sql(
@@ -279,7 +285,7 @@ public class StockStore {
         return jdbc.sql(
                         """
                         SELECT product_id, name, marketer, composition, form, pack, product_type, reorder_level,
-                               rack, rack_alt, prescription_required
+                               rack, rack_alt, prescription_required, online_mrp, online_price
                         FROM inventory_product
                         WHERE pharmacy_id = :id
                         ORDER BY name, product_id
@@ -296,7 +302,7 @@ public class StockStore {
         return jdbc.sql(
                         """
                         SELECT product_id, name, marketer, composition, form, pack, product_type, reorder_level,
-                               rack, rack_alt, prescription_required
+                               rack, rack_alt, prescription_required, online_mrp, online_price
                         FROM inventory_product
                         WHERE pharmacy_id = :id AND product_id IN (:products)
                         """)
@@ -310,7 +316,7 @@ public class StockStore {
         return jdbc.sql(
                         """
                         SELECT product_id, name, marketer, composition, form, pack, product_type, reorder_level,
-                               rack, rack_alt, prescription_required
+                               rack, rack_alt, prescription_required, online_mrp, online_price
                         FROM inventory_product
                         WHERE pharmacy_id = :id AND product_id = :product
                         """)
@@ -468,6 +474,64 @@ public class StockStore {
                 .param("pharmacy", pharmacyId)
                 .param("product", productId)
                 .param("reorder", reorderLevel)
+                .update();
+    }
+
+    public int updateOnlinePrice(UUID pharmacyId, String productId, BigDecimal onlineMrp, BigDecimal onlinePrice) {
+        return jdbc.sql(
+                        """
+                        UPDATE inventory_product
+                        SET online_mrp = :mrp, online_price = :price
+                        WHERE pharmacy_id = :pharmacy AND product_id = :product
+                        """)
+                .param("pharmacy", pharmacyId)
+                .param("product", productId)
+                .param("mrp", onlineMrp)
+                .param("price", onlinePrice)
+                .update();
+    }
+
+    public List<OnlineListing> onlineListings(
+            Collection<UUID> pharmacyIds, Collection<String> productIds, String currentMonth) {
+        if (pharmacyIds.isEmpty() || productIds.isEmpty()) {
+            return List.of();
+        }
+        return jdbc.sql(
+                        """
+                        SELECT p.pharmacy_id, p.product_id, p.online_mrp, p.online_price,
+                               COALESCE(SUM(b.qty), 0) AS available_qty
+                        FROM inventory_product p
+                        JOIN inventory_batch b
+                          ON b.pharmacy_id = p.pharmacy_id AND b.product_id = p.product_id
+                        WHERE p.pharmacy_id IN (:pharmacies)
+                          AND p.product_id IN (:products)
+                          AND p.online_mrp IS NOT NULL
+                          AND p.online_price IS NOT NULL
+                          AND b.qty > 0
+                          AND (b.expiry = '' OR b.expiry >= :currentMonth)
+                        GROUP BY p.pharmacy_id, p.product_id, p.online_mrp, p.online_price
+                        """)
+                .param("pharmacies", pharmacyIds)
+                .param("products", productIds)
+                .param("currentMonth", currentMonth)
+                .query((row, number) -> new OnlineListing(
+                        row.getObject("pharmacy_id", UUID.class),
+                        row.getString("product_id"),
+                        row.getBigDecimal("online_mrp"),
+                        row.getBigDecimal("online_price"),
+                        row.getInt("available_qty")))
+                .list();
+    }
+
+    public int clearOnlinePrice(UUID pharmacyId, String productId) {
+        return jdbc.sql(
+                        """
+                        UPDATE inventory_product
+                        SET online_mrp = NULL, online_price = NULL
+                        WHERE pharmacy_id = :pharmacy AND product_id = :product
+                        """)
+                .param("pharmacy", pharmacyId)
+                .param("product", productId)
                 .update();
     }
 
@@ -684,7 +748,7 @@ public class StockStore {
                 .query(Integer.class)
                 .single();
         List<ProductRow> products = jdbc.sql(
-                        "SELECT product_id, name, marketer, composition, form, pack, product_type, reorder_level, rack, rack_alt, prescription_required FROM ("
+                        "SELECT product_id, name, marketer, composition, form, pack, product_type, reorder_level, rack, rack_alt, prescription_required, online_mrp, online_price FROM ("
                                 + inventoryFacts(true)
                                 + ") facts "
                                 + inventoryMatch()
@@ -811,7 +875,7 @@ public class StockStore {
                 : "";
         return """
                 SELECT p.product_id, p.name, p.marketer, p.composition, p.form, p.pack, p.product_type,
-                       p.reorder_level, p.rack, p.rack_alt, p.prescription_required,
+                       p.reorder_level, p.rack, p.rack_alt, p.prescription_required, p.online_mrp, p.online_price,
                        COALESCE(SUM(CASE WHEN b.qty > 0 THEN b.qty ELSE 0 END), 0) AS units,
                        COALESCE(SUM(CASE WHEN b.qty > 0 THEN b.rate * b.qty ELSE 0 END), 0) AS cost,
                        COALESCE(SUM(CASE WHEN b.qty > 0 THEN b.mrp * b.qty ELSE 0 END), 0) AS retail,
@@ -826,7 +890,7 @@ public class StockStore {
                 + search
                 + """
                 GROUP BY p.product_id, p.name, p.marketer, p.composition, p.form, p.pack, p.product_type,
-                         p.reorder_level, p.rack, p.rack_alt, p.prescription_required
+                         p.reorder_level, p.rack, p.rack_alt, p.prescription_required, p.online_mrp, p.online_price
                 """;
     }
 
@@ -900,7 +964,9 @@ public class StockStore {
                 row.getInt("reorder_level"),
                 row.getString("rack"),
                 row.getString("rack_alt"),
-                flag(row, "prescription_required"));
+                flag(row, "prescription_required"),
+                row.getBigDecimal("online_mrp"),
+                row.getBigDecimal("online_price"));
     }
 
     private BatchRow batch(ResultSet row, int number) throws SQLException {

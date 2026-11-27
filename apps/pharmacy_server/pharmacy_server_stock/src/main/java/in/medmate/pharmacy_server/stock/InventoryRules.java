@@ -1,5 +1,6 @@
 package in.medmate.pharmacy_server.stock;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import in.medmate.pharmacy_server.shared.error.ApiProblem;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -17,6 +18,26 @@ public final class InventoryRules {
     private InventoryRules() {}
 
     public record Batch(String expiry, int qty, BigDecimal rate, BigDecimal mrp) {}
+
+    public record OnlinePrice(BigDecimal onlineMrp, BigDecimal onlinePrice, String problem) {}
+
+    public static OnlinePrice onlinePrice(JsonNode body) {
+        if (body == null || !body.isObject()) {
+            return new OnlinePrice(null, null, "Online MRP is required");
+        }
+        BigDecimal mrp = money(body.get("onlineMrp"));
+        BigDecimal price = money(body.get("onlinePrice"));
+        if (mrp == null) {
+            return new OnlinePrice(null, null, "Online MRP is not valid");
+        }
+        if (price == null) {
+            return new OnlinePrice(null, null, "Online price is not valid");
+        }
+        if (price.compareTo(mrp) > 0) {
+            return new OnlinePrice(null, null, "Online price cannot exceed online MRP");
+        }
+        return new OnlinePrice(mrp, price, null);
+    }
 
     public static int units(List<Batch> batches) {
         int total = 0;
@@ -108,6 +129,26 @@ public final class InventoryRules {
 
     public static YearMonth yearMonth(String expiry) {
         return YearMonth.parse(expiry);
+    }
+
+    private static BigDecimal money(JsonNode node) {
+        if (node == null || node.isNull()) {
+            return null;
+        }
+        try {
+            BigDecimal value = node.isNumber()
+                    ? node.decimalValue()
+                    : new BigDecimal(node.asText().trim());
+            if (value.signum() < 0 || value.stripTrailingZeros().scale() > 2) {
+                return null;
+            }
+            if (value.precision() - value.scale() > 10) {
+                return null;
+            }
+            return value.setScale(2, RoundingMode.HALF_UP);
+        } catch (NumberFormatException | ArithmeticException exception) {
+            return null;
+        }
     }
 
     private static BigDecimal sum(List<Batch> batches, boolean expiringOnly, YearMonth month) {

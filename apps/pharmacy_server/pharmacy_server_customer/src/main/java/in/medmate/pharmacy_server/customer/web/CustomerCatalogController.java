@@ -1,6 +1,5 @@
 package in.medmate.pharmacy_server.customer.web;
 
-import in.medmate.pharmacy_server.catalog.CatalogDocuments;
 import in.medmate.pharmacy_server.identity.web.Current;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
@@ -21,7 +20,7 @@ public class CustomerCatalogController {
     }
 
     @GetMapping("/api/v1/customer/catalog")
-    public CatalogDocuments.AvailablePage list(
+    public CustomerCatalogViews.Page list(
             Authentication authentication,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String q,

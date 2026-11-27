@@ -28,7 +28,7 @@ public class NearbyService {
         }
         NearbyRules.Query query = NearbyRules.query(latitude, longitude, limit);
         List<NearbyViews.PharmacyView> pharmacies =
-                nearby.nearby(query.latitude(), query.longitude(), query.limit()).stream()
+                nearby.nearby(query.latitude(), query.longitude(), query.limit(), NearbyRules.MAX_DISTANCE_KM).stream()
                         .map(NearbyService::view)
                         .toList();
         return new NearbyViews.ListResponse(pharmacies);

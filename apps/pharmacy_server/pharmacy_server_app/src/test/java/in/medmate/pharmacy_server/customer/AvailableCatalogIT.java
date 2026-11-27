@@ -122,6 +122,8 @@ class AvailableCatalogIT {
         assertThat(drug.get("price").decimalValue()).isEqualByComparingTo(new BigDecimal("25.50"));
         assertThat(drug.get("image").asText()).isEqualTo("https://img.example/crocin.jpg");
         assertThat(drug.get("rxRequired").asBoolean()).isTrue();
+        assertThat(drug.get("pharmacyId").isNull()).isTrue();
+        assertThat(drug.get("deliveryCharge").isNull()).isTrue();
         assertThat(page.get("items").get(1).get("rxRequired").asBoolean()).isFalse();
         assertThat(page.get("items").get(1).get("image").asText()).isEqualTo("https://img.example/wash.jpg");
 
@@ -139,6 +141,46 @@ class AvailableCatalogIT {
         String admin = token(verify("9822001803", "admin", "login", true));
         JsonNode categories = exchange(admin, "/api/v1/catalog/categories", HttpStatus.OK);
         assertThat(names(categories.get("categories"))).containsExactly("Pain", "Skin");
+    }
+
+    @Test
+    void aNearbyOnlineListingAddsADeliveryCharge() throws Exception {
+        JsonNode pharmacy = verify("9822001811", "pharmacy", "signup", false);
+        String pharmacyId = pharmacy.get("account").get("pharmacyId").asText();
+        approve(pharmacyId);
+        stock(pharmacyId);
+        try (Connection connection = dataSource.getConnection();
+                Statement statement = connection.createStatement()) {
+            statement.execute(
+                    "UPDATE pharmacy SET accept_online_orders = TRUE, latitude = 12.9800, longitude = 77.6000 "
+                            + "WHERE id = '" + pharmacyId + "'");
+            statement.execute("UPDATE inventory_product SET online_mrp = 120.00, online_price = 99.00 "
+                    + "WHERE pharmacy_id = '" + pharmacyId + "' AND product_id = 'IN1'");
+        }
+        JsonNode customer = verify("9822001812", "customer", "login", false);
+        String accountId = customer.get("account").get("id").asText();
+        try (Connection connection = dataSource.getConnection();
+                Statement statement = connection.createStatement()) {
+            statement.execute(
+                    """
+                    INSERT INTO customer_delivery_address (
+                      id, account_id, label, line1, line2, city, pincode, latitude, longitude,
+                      receiver_name, receiver_phone, selected, created_at, updated_at)
+                    VALUES (
+                      '00000000-0000-4000-8000-000000000081', '%s', 'home', '12 Residency Road', '',
+                      'Bengaluru', '560001', 12.9716, 77.5946, 'Priya', '9845012345', TRUE, NOW(), NOW())
+                    """
+                            .formatted(accountId));
+        }
+
+        JsonNode page = exchange(token(customer), "/api/v1/customer/catalog?q=crocin", HttpStatus.OK);
+        JsonNode drug = page.get("items").get(0);
+        assertThat(drug.get("price").decimalValue()).isEqualByComparingTo(new BigDecimal("25.50"));
+        assertThat(drug.get("pharmacyId").asText()).isEqualTo(pharmacyId);
+        assertThat(drug.get("onlineMrp").asText()).isEqualTo("120.00");
+        assertThat(drug.get("onlinePrice").asText()).isEqualTo("99.00");
+        assertThat(drug.get("deliveryCharge").get("amount").asText()).isEqualTo("0.00");
+        assertThat(drug.get("distanceKm").asDouble()).isPositive();
     }
 
     private void stock(String pharmacyId) throws SQLException {

@@ -2,6 +2,8 @@ package in.medmate.pharmacy_server.stock;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.math.BigDecimal;
 import java.time.YearMonth;
 import java.util.List;
@@ -38,5 +40,27 @@ class InventoryRulesTest {
         assertThat(InventoryRules.retail(List.of(soon))).isEqualByComparingTo("18.00");
         assertThat(InventoryRules.expiringCost(List.of(fresh, soon), november)).isEqualByComparingTo("8.00");
         assertThat(InventoryRules.units(List.of(fresh, soon))).isEqualTo(7);
+    }
+
+    @Test
+    void onlinePriceMustNotExceedOnlineMrp() throws Exception {
+        ObjectMapper json = new ObjectMapper();
+        ObjectNode body = json.createObjectNode();
+        body.put("onlineMrp", "120.00");
+        body.put("onlinePrice", "99.00");
+
+        InventoryRules.OnlinePrice saved = InventoryRules.onlinePrice(body);
+        assertThat(saved.problem()).isNull();
+        assertThat(saved.onlineMrp()).isEqualByComparingTo("120.00");
+        assertThat(saved.onlinePrice()).isEqualByComparingTo("99.00");
+
+        body.put("onlinePrice", "121.00");
+        assertThat(InventoryRules.onlinePrice(body).problem()).isEqualTo("Online price cannot exceed online MRP");
+
+        body.put("onlineMrp", "-1");
+        assertThat(InventoryRules.onlinePrice(body).problem()).isEqualTo("Online MRP is not valid");
+
+        body.remove("onlineMrp");
+        assertThat(InventoryRules.onlinePrice(body).problem()).isEqualTo("Online MRP is not valid");
     }
 }

@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Clock;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.context.annotation.Profile;
 import org.springframework.dao.DuplicateKeyException;
@@ -102,6 +103,21 @@ public class CouponService {
         return coupons.update(id, prepared.draft(), key, contentType, clock.instant())
                 .map(this::one)
                 .orElseThrow(CouponService::missing);
+    }
+
+    public Optional<CouponRules.Quote> quoteFor(UUID customerId, String code, BigDecimal orderTotal, UUID pharmacyId) {
+        Optional<CouponStore.CouponRow> found = coupons.findByCode(code);
+        if (found.isEmpty()) {
+            return Optional.empty();
+        }
+        CouponStore.CouponRow row = found.get();
+        return Optional.of(CouponRules.quote(
+                snapshot(row),
+                row.redemptionCount(),
+                coupons.redemptionsForCustomer(row.id(), customerId),
+                orderTotal,
+                pharmacyId,
+                clock.instant()));
     }
 
     public CouponViews.Preview preview(AccountPrincipal actor, JsonNode body) {

@@ -1,0 +1,28 @@
+meta {
+  name: Select cart pharmacies
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/v1/customer/cart/pharmacies
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "pharmacyIds": ["{{examplePharmacyId}}"]
+  }
+}
+
+docs {
+  Customer accounts only. Replaces the pharmacies the customer wants to order from.
+  An empty pharmacyIds list returns to the recommended grouping.
+}

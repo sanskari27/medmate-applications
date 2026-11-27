@@ -25,6 +25,8 @@ export type InventoryProduct = {
   rack: string | null;
   rackAlt: string | null;
   prescriptionRequired?: boolean | null;
+  onlineMrp?: string | null;
+  onlinePrice?: string | null;
   batches: InventoryBatch[];
 };
 
@@ -171,8 +173,35 @@ export function inr(amount: number): string {
   return "₹" + Math.round(amount).toLocaleString("en-IN");
 }
 
+export function onlinePriceProblem(onlineMrp: string, onlinePrice: string): string | null {
+  const mrp = moneyAmount(onlineMrp);
+  const price = moneyAmount(onlinePrice);
+  if (mrp == null) return "Online MRP is not valid";
+  if (price == null) return "Online price is not valid";
+  if (price > mrp) return "Online price cannot exceed online MRP";
+  return null;
+}
+
+export function onlineAmounts(onlineMrp: string, onlinePrice: string) {
+  const mrp = moneyAmount(onlineMrp);
+  const price = moneyAmount(onlinePrice);
+  return {
+    onlineMrp: mrp == null ? onlineMrp.trim() : mrp.toFixed(2),
+    onlinePrice: price == null ? onlinePrice.trim() : price.toFixed(2),
+  };
+}
+
+function moneyAmount(raw: string): number | null {
+  const text = raw.trim();
+  if (!/^\d+(\.\d{1,2})?$/.test(text)) return null;
+  const [whole] = text.split(".");
+  if (whole.length > 10) return null;
+  const value = Number(text);
+  return Number.isFinite(value) ? value : null;
+}
+
 export function inventoryCsv(products: InventoryProduct[]): string {
-  const rows = ["Product,Type,Batches,Expiry,Stock,MRP,Value"];
+  const rows = ["Product,Type,Batches,Expiry,Stock,MRP,Online MRP,Online price,Value"];
   for (const product of products) {
     const visible = product.batches.filter((batch) => batch.qty > 0);
     rows.push(
@@ -183,6 +212,8 @@ export function inventoryCsv(products: InventoryProduct[]): string {
         nearestExpiry(product) ?? "",
         String(units(product)),
         visible[0]?.mrp ?? "",
+        product.onlineMrp ?? "",
+        product.onlinePrice ?? "",
         cost(product).toFixed(2),
       ]
         .map((cell) => `"${cell.replaceAll('"', '""')}"`)

@@ -1,0 +1,37 @@
+meta {
+  name: Set online price
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/pharmacy/inventory/DR100/online-price
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "onlineMrp": "120.00",
+    "onlinePrice": "99.00"
+  }
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  An approved owner, or staff with inventory:update, sets the online MRP and the discounted online price together.
+  The online price cannot exceed the online MRP. Both are cleared by the delete request.
+}

@@ -1,0 +1,29 @@
+meta {
+  name: Clear online price
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/pharmacy/inventory/DR100/online-price
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("saved session is sent", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+    }
+  });
+}
+
+docs {
+  An approved owner, or staff with inventory:update, removes the online MRP and online price.
+  The product stays in inventory and is no longer offered online.
+}

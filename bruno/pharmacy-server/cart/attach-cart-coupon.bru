@@ -1,0 +1,27 @@
+meta {
+  name: Attach cart coupon
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{baseUrl}}/api/v1/customer/cart/coupon
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+body:json {
+  {
+    "code": "SAVE50"
+  }
+}
+
+docs {
+  Customer accounts only. Stores a coupon code. The discount is quoted per pharmacy group and is not redeemed here.
+}
