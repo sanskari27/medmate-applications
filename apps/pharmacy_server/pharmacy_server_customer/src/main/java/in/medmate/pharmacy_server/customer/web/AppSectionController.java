@@ -5,6 +5,8 @@ import in.medmate.pharmacy_server.customer.AppSectionRules;
 import in.medmate.pharmacy_server.identity.web.Current;
 import in.medmate.pharmacy_server.shared.error.ApiProblem;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
@@ -46,9 +48,16 @@ public class AppSectionController {
     public ResponseEntity<AppSectionViews.One> create(
             Authentication authentication,
             @RequestPart("section") JsonNode section,
-            @RequestPart(value = "image", required = false) MultipartFile image) {
+            @RequestPart(value = "image", required = false) MultipartFile image,
+            @RequestPart(value = "banner", required = false) MultipartFile banner,
+            @RequestPart(value = "categoryImage", required = false) List<MultipartFile> categoryImages) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(sections.create(Current.require(authentication), section, read(image)));
+                .body(sections.create(
+                        Current.require(authentication),
+                        section,
+                        read(image, "Image"),
+                        read(banner, "Banner"),
+                        reads(categoryImages)));
     }
 
     @PutMapping(path = "/api/v1/app-sections/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -56,8 +65,16 @@ public class AppSectionController {
             Authentication authentication,
             @PathVariable UUID id,
             @RequestPart("section") JsonNode section,
-            @RequestPart(value = "image", required = false) MultipartFile image) {
-        return sections.update(Current.require(authentication), id, section, read(image));
+            @RequestPart(value = "image", required = false) MultipartFile image,
+            @RequestPart(value = "banner", required = false) MultipartFile banner,
+            @RequestPart(value = "categoryImage", required = false) List<MultipartFile> categoryImages) {
+        return sections.update(
+                Current.require(authentication),
+                id,
+                section,
+                read(image, "Image"),
+                read(banner, "Banner"),
+                reads(categoryImages));
     }
 
     @DeleteMapping("/api/v1/app-sections/{id}")
@@ -66,14 +83,25 @@ public class AppSectionController {
         return ResponseEntity.noContent().build();
     }
 
-    private static AppSectionRules.Upload read(MultipartFile file) {
+    private static List<AppSectionRules.Upload> reads(List<MultipartFile> files) {
+        if (files == null) {
+            return List.of();
+        }
+        List<AppSectionRules.Upload> uploads = new ArrayList<>();
+        for (MultipartFile file : files) {
+            uploads.add(read(file, "Category image"));
+        }
+        return uploads;
+    }
+
+    private static AppSectionRules.Upload read(MultipartFile file, String name) {
         if (file == null || file.isEmpty()) {
             return null;
         }
         try {
             return new AppSectionRules.Upload(file.getContentType(), file.getBytes());
         } catch (IOException exception) {
-            throw new ApiProblem(HttpStatus.BAD_REQUEST, "Bad request", "Image must be an image");
+            throw new ApiProblem(HttpStatus.BAD_REQUEST, "Bad request", name + " must be an image");
         }
     }
 }

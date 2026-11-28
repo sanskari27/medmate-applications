@@ -52,9 +52,24 @@ describe("AppSectionsPage", () => {
             sections: [
               {
                 id: "section-1",
-                category: "Pain",
+                title: "Everyday care",
                 position: 1,
-                image: { contentType: "image/png", url: "http://127.0.0.1/pain.png" },
+                image: { contentType: "image/png", url: "http://127.0.0.1/section.png" },
+                banner: { contentType: "image/webp", url: "http://127.0.0.1/banner.png" },
+                categories: [
+                  {
+                    id: "category-1",
+                    category: "Pain",
+                    position: 0,
+                    images: [
+                      {
+                        id: "image-1",
+                        contentType: "image/jpeg",
+                        url: "http://127.0.0.1/pain.png",
+                      },
+                    ],
+                  },
+                ],
               },
             ],
           });
@@ -69,10 +84,14 @@ describe("AppSectionsPage", () => {
       </Provider>,
     );
 
-    expect(await screen.findByText("Pain")).toBeTruthy();
+    expect(await screen.findByText("Everyday care")).toBeTruthy();
+    expect(screen.getByText("Pain")).toBeTruthy();
     expect(screen.getByText("Position 1")).toBeTruthy();
+    expect(document.querySelectorAll("article img")).toHaveLength(3);
     fireEvent.click(screen.getByRole("button", { name: "Edit" }));
     expect(await screen.findByRole("heading", { name: "Edit section" })).toBeTruthy();
-    expect(screen.getByLabelText("Category")).toBeTruthy();
+    expect(screen.getByLabelText("Name")).toBeTruthy();
+    expect(screen.getByLabelText("Banner")).toBeTruthy();
+    expect((screen.getByLabelText("Category") as HTMLSelectElement).value).toBe("Pain");
   });
 });

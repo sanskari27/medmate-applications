@@ -16,12 +16,14 @@ headers {
 }
 
 body:multipart-form {
-  section: {"category":"Pain","position":1}
+  section: {"title":"Everyday care","position":1,"categories":[{"category":"Pain","images":[{"file":true}]}]}
   image: @file(../coupons/banner.png)
+  banner: @file(../coupons/banner.png)
+  categoryImage: @file(../coupons/banner.png)
 }
 
 tests {
-  test("admin and sales can create a category tile", function() {
+  test("admin and sales can create a section", function() {
     if (!bru.getEnvVar("accessToken")) {
       expect(res.getStatus()).to.equal(401);
       expect(res.body.detail).to.equal("Sign in is required");
@@ -36,12 +38,15 @@ tests {
       return;
     }
     expect(res.getStatus()).to.equal(201);
-    expect(res.body.section.category).to.be.a("string");
+    expect(res.body.section.title).to.be.a("string");
     expect(res.body.section.image.contentType).to.be.a("string");
+    expect(res.body.section.banner.contentType).to.be.a("string");
+    expect(res.body.section.categories).to.be.an("array");
   });
 }
 
 docs {
-  Multipart request. The section part is JSON and the image part is a JPEG, PNG, or WebP up to 2 MB.
-  category must already exist on a drug or FMCG product. One tile per category.
+  Multipart request. The section part is JSON. image, banner, and each new categoryImage are JPEG, PNG, or WebP files up to 2 MB.
+  A category must already exist on a drug or FMCG product. Each category can be listed in only one section.
+  Category image order follows the images array: {"id":"<existing>"} keeps a file, {"file":true} uses the next categoryImage part.
 }

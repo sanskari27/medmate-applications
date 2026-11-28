@@ -16,7 +16,7 @@ headers {
 }
 
 tests {
-  test("a customer lists category tiles", function() {
+  test("a customer lists app sections", function() {
     if (!bru.getEnvVar("accessToken")) {
       expect(res.getStatus()).to.equal(401);
       expect(res.body.detail).to.equal("Sign in is required");
@@ -32,5 +32,5 @@ tests {
 }
 
 docs {
-  Customer accounts only. Tiles are ordered by position, then category. Each tile has a category and a square image.
+  Customer accounts only. Sections are ordered by position, then name. Each section has an image, a banner, and the categories inside it.
 }

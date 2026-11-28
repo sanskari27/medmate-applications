@@ -71,7 +71,8 @@ export function AppSectionsPage() {
         </Button>
       </Stack>
       <Text className="text-[13.5px] text-muted">
-        Category tiles for the mobile app. Each tile uses one catalog category and a square image.
+        Home sections for the mobile app. Each section has an image, a banner, and the categories
+        shown inside it.
       </Text>
       {sections.isError ? (
         <Text role="alert" className="text-[13.5px] font-bold text-rose">
@@ -85,37 +86,74 @@ export function AppSectionsPage() {
         <Text className="text-[13.5px] text-muted">No sections yet.</Text>
       ) : null}
       {!sections.isLoading && !sections.isError && rows.length > 0 ? (
-        <div className="flex flex-wrap gap-4">
+        <div className="grid max-w-3xl gap-4">
           {rows.map((section) => (
             <article
               key={section.id}
-              className="flex w-40 flex-col gap-2 rounded-lg border border-line bg-paper p-3"
+              className="overflow-hidden rounded-lg border border-line bg-paper"
             >
               <img
-                src={section.image.url}
+                src={section.banner.url}
                 alt=""
-                width={160}
-                height={160}
-                className="aspect-square w-full rounded-md object-cover"
+                width={768}
+                height={144}
+                className="h-36 w-full object-cover"
               />
-              <Text className="text-[13.5px] font-bold text-ink">{section.category}</Text>
-              <Text className="text-[12px] text-muted">Position {section.position}</Text>
-              <Stack direction="row" className="gap-2">
-                <Button type="button" size="sm" variant="line" onClick={() => setEditing(section)}>
-                  Edit
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="rose"
-                  onClick={() => {
-                    setDeleteError(null);
-                    setPendingDelete(section);
-                  }}
-                >
-                  Delete
-                </Button>
-              </Stack>
+              <div className="grid gap-3 p-3">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={section.image.url}
+                    alt=""
+                    width={64}
+                    height={64}
+                    className="size-16 rounded-md object-cover"
+                  />
+                  <div>
+                    <Text className="text-[15px] font-bold text-ink">{section.title}</Text>
+                    <Text className="text-[12px] text-muted">Position {section.position}</Text>
+                  </div>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {section.categories.map((category) => (
+                    <div key={category.id} className="grid gap-2 rounded-md border border-line p-2">
+                      <Text className="text-[13px] font-bold text-ink">{category.category}</Text>
+                      <div className="flex flex-wrap gap-2">
+                        {category.images.map((image) => (
+                          <img
+                            key={image.id}
+                            src={image.url}
+                            alt=""
+                            width={56}
+                            height={56}
+                            className="size-14 rounded-md object-cover"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <Stack direction="row" className="gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="line"
+                    onClick={() => setEditing(section)}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="rose"
+                    onClick={() => {
+                      setDeleteError(null);
+                      setPendingDelete(section);
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </Stack>
+              </div>
             </article>
           ))}
         </div>
@@ -134,8 +172,8 @@ export function AppSectionsPage() {
       ) : null}
       {pendingDelete ? (
         <ConfirmDialog
-          title={`Delete ${pendingDelete.category}?`}
-          body="The mobile app will stop showing this category tile."
+          title={`Delete ${pendingDelete.title}?`}
+          body="The mobile app will stop showing this section and the categories inside it."
           tone="danger"
           busy={deleted.isLoading}
           error={deleteError}

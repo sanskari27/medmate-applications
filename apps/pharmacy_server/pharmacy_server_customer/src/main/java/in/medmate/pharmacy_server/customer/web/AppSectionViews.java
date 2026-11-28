@@ -7,9 +7,13 @@ public final class AppSectionViews {
 
     private AppSectionViews() {}
 
-    public record Image(String contentType, String url) {}
+    public record Media(String contentType, String url) {}
 
-    public record Section(UUID id, String category, int position, Image image) {}
+    public record CategoryImage(UUID id, String contentType, String url) {}
+
+    public record Category(UUID id, String category, int position, List<CategoryImage> images) {}
+
+    public record Section(UUID id, String title, int position, Media image, Media banner, List<Category> categories) {}
 
     public record ListResponse(List<Section> sections) {}
 
