@@ -12,6 +12,8 @@ public interface CatalogStore {
     CatalogDocuments.AvailablePage available(
             List<String> productIds, String category, String query, int page, int size);
 
+    List<CatalogDocuments.ProductCategory> primaryCategories(List<String> productIds);
+
     List<String> categories();
 
     Optional<String> canonicalCategory(String category);

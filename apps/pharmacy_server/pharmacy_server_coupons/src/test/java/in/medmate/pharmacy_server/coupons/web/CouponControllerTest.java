@@ -146,6 +146,33 @@ class CouponControllerTest {
         verify(documents).delete(any());
     }
 
+    @Test
+    void aCustomerSeesCouponsAPharmacyAccepts() throws Exception {
+        UUID pharmacy = UUID.fromString("00000000-0000-4000-8000-0000000000b1");
+        AccountAuthentication customer = account(AccountType.CUSTOMER, Set.of(), false);
+        mvc.perform(get("/api/v1/customer/pharmacies/" + pharmacy + "/coupons"))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/v1/customer/pharmacies/" + pharmacy + "/coupons")
+                        .principal(account(AccountType.PHARMACY, Set.of(), false)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.detail").value("This action is not allowed."));
+        mvc.perform(get("/api/v1/customer/pharmacies/not-a-uuid/coupons").principal(customer))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.detail").value("Pharmacy was not found"));
+        when(store.pharmaciesExist(List.of(pharmacy))).thenReturn(false);
+        mvc.perform(get("/api/v1/customer/pharmacies/" + pharmacy + "/coupons").principal(customer))
+                .andExpect(status().isNotFound());
+        when(store.pharmaciesExist(List.of(pharmacy))).thenReturn(true);
+        when(store.accepting(pharmacy, NOW)).thenReturn(List.of(row(true, "selected", null, null, 0)));
+        mvc.perform(get("/api/v1/customer/pharmacies/" + pharmacy + "/coupons").principal(customer))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.coupons[0].id").value(COUPON.toString()))
+                .andExpect(jsonPath("$.coupons[0].code").value("WELCOME10"))
+                .andExpect(jsonPath("$.coupons[0].title").value("Welcome offer"))
+                .andExpect(jsonPath("$.coupons[0].discountType").value("pct"))
+                .andExpect(jsonPath("$.coupons[0].discountValue").value("10.00"));
+    }
+
     private static MockMultipartFile couponPart() {
         return new MockMultipartFile("coupon", "coupon.json", "application/json", JSON.getBytes());
     }

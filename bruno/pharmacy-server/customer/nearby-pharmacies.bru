@@ -28,6 +28,9 @@ tests {
     }
     expect(res.getStatus()).to.equal(200);
     expect(res.body.pharmacies).to.be.an("array");
+    if (res.body.pharmacies.length > 0) {
+      bru.setEnvVar("pharmacyId", res.body.pharmacies[0].pharmacyId);
+    }
     res.body.pharmacies.forEach(function(pharmacy) {
       expect(pharmacy.openingHours).to.be.an("array");
       expect(pharmacy.deliveryCharge.amount).to.match(/^\d+\.\d{2}$/);
@@ -60,4 +63,5 @@ docs {
   openAllHours is true when every day is open from 00:00 to 23:59.
   distanceKm on the charge matches the pharmacy distance, rounded to 3 decimals.
   Limit defaults to 20 and caps at 50.
+  The first pharmacyId is stored for the pharmacy shelf and pharmacy coupons.
 }

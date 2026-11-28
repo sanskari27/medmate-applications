@@ -128,5 +128,7 @@ public final class CatalogDocuments {
 
     public record AvailablePage(List<AvailableItem> items, int page, int size, int total) {}
 
+    public record ProductCategory(String productId, String category) {}
+
     public record CategoryList(List<String> categories) {}
 }

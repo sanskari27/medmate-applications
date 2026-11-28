@@ -52,6 +52,10 @@ public final class CouponViews {
 
     public record One(Detail coupon) {}
 
+    public record StoreOffer(UUID id, String code, String title, String discountType, String discountValue) {}
+
+    public record StoreOffers(List<StoreOffer> coupons) {}
+
     public record Preview(
             String code,
             String title,

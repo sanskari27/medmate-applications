@@ -145,6 +145,11 @@ class StoreMedicineCatalogTest {
         }
 
         @Override
+        public List<CatalogDocuments.ProductCategory> primaryCategories(List<String> productIds) {
+            return List.of();
+        }
+
+        @Override
         public List<String> categories() {
             return List.of();
         }

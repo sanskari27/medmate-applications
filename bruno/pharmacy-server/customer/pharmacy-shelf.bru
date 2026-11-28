@@ -1,0 +1,56 @@
+meta {
+  name: Pharmacy shelf
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/v1/customer/pharmacies/{{pharmacyId}}/catalog?q=&rx=
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("a customer sees one nearby pharmacy shelf", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      expect(res.body.detail).to.equal("Sign in is required");
+      return;
+    }
+    if (res.getStatus() === 403) {
+      expect(res.body.detail).to.equal("This action is not allowed.");
+      return;
+    }
+    if (!bru.getEnvVar("pharmacyId") || res.getStatus() === 404) {
+      expect(res.getStatus()).to.equal(404);
+      expect(res.body.detail).to.equal("Pharmacy was not found");
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.body.categories).to.be.an("array");
+    expect(res.body.items).to.be.an("array");
+    expect(res.body.page).to.equal(1);
+    expect(res.body.total).to.be.a("number");
+    res.body.items.forEach(function(item) {
+      expect(item.onlineMrp).to.match(/^\d+\.\d{2}$/);
+      expect(item.onlinePrice).to.match(/^\d+\.\d{2}$/);
+      expect(item.rxRequired).to.be.a("boolean");
+    });
+  });
+}
+
+docs {
+  Customer accounts only. A pharmacy token is forbidden.
+  The pharmacy must accept online orders and be inside the nearby set for the selected address.
+  Without a selected address, or when the pharmacy is missing, offline, or out of range, the shelf is not found.
+  q filters the product name. rx is otc or required. A blank rx returns every item. Any other rx is rejected.
+  With no category, Everyday essentials returns at most nine products and every other category at most three.
+  categories still lists each group with its full total. Other holds stock that has no catalogue category and is last.
+  category pages that one group with page and size. An unknown category returns no items and total 0.
+  Prices are that pharmacy's online marked price and selling price.
+}

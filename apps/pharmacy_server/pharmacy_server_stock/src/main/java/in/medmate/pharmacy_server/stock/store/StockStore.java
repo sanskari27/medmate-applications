@@ -491,6 +491,32 @@ public class StockStore {
                 .update();
     }
 
+    public List<OnlineListing> pharmacyListings(UUID pharmacyId, String currentMonth) {
+        return jdbc.sql(
+                        """
+                        SELECT p.product_id, p.online_mrp, p.online_price,
+                               COALESCE(SUM(b.qty), 0) AS available_qty
+                        FROM inventory_product p
+                        JOIN inventory_batch b
+                          ON b.pharmacy_id = p.pharmacy_id AND b.product_id = p.product_id
+                        WHERE p.pharmacy_id = :pharmacy
+                          AND p.online_mrp IS NOT NULL
+                          AND p.online_price IS NOT NULL
+                          AND b.qty > 0
+                          AND (b.expiry = '' OR b.expiry >= :currentMonth)
+                        GROUP BY p.product_id, p.online_mrp, p.online_price
+                        """)
+                .param("pharmacy", pharmacyId)
+                .param("currentMonth", currentMonth)
+                .query((row, number) -> new OnlineListing(
+                        pharmacyId,
+                        row.getString("product_id"),
+                        row.getBigDecimal("online_mrp"),
+                        row.getBigDecimal("online_price"),
+                        row.getInt("available_qty")))
+                .list();
+    }
+
     public List<OnlineListing> onlineListings(
             Collection<UUID> pharmacyIds, Collection<String> productIds, String currentMonth) {
         if (pharmacyIds.isEmpty() || productIds.isEmpty()) {

@@ -1,0 +1,49 @@
+meta {
+  name: Pharmacy coupons
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/v1/customer/pharmacies/{{pharmacyId}}/coupons
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("a customer sees coupons one pharmacy accepts", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      expect(res.body.detail).to.equal("Sign in is required");
+      return;
+    }
+    if (res.getStatus() === 403) {
+      expect(res.body.detail).to.equal("This action is not allowed.");
+      return;
+    }
+    if (!bru.getEnvVar("pharmacyId") || res.getStatus() === 404) {
+      expect(res.getStatus()).to.equal(404);
+      expect(res.body.detail).to.equal("Pharmacy was not found");
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.body.coupons).to.be.an("array");
+    res.body.coupons.forEach(function(coupon) {
+      expect(coupon.code).to.be.a("string").that.is.not.empty;
+      expect(coupon.title).to.be.a("string");
+      expect(coupon.discountValue).to.match(/^\d+\.\d{2}$/);
+    });
+  });
+}
+
+docs {
+  Customer accounts only. A pharmacy token is forbidden.
+  Coupons are active, inside their start and end window, and scoped to every pharmacy or to this pharmacy.
+  A pharmacy that does not exist is not found. Redemption limits are not applied here.
+  discountType is pct or flat. discountValue is the coupon's configured value, not the quoted saving.
+}

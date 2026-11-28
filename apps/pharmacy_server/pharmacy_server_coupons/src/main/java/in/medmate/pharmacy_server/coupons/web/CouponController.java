@@ -63,6 +63,12 @@ public class CouponController {
         return coupons.update(Current.require(authentication), id, coupon, read(banner));
     }
 
+    @GetMapping("/api/v1/customer/pharmacies/{pharmacyId}/coupons")
+    public CouponViews.StoreOffers pharmacy(
+            Authentication authentication, @PathVariable String pharmacyId) {
+        return coupons.forPharmacy(Current.require(authentication), pharmacyId);
+    }
+
     @PostMapping("/api/v1/customer/coupons/preview")
     public CouponViews.Preview preview(Authentication authentication, @RequestBody JsonNode body) {
         return coupons.preview(Current.require(authentication), body);

@@ -180,6 +180,32 @@ public class CouponStore {
                 .list();
     }
 
+    public List<CouponRow> accepting(UUID pharmacyId, Instant now) {
+        return jdbc.sql(
+                        """
+                        SELECT
+                        """
+                                + COLUMNS
+                                + """
+                        FROM coupon c
+                        WHERE c.active = TRUE
+                          AND (c.starts_at IS NULL OR c.starts_at <= :now)
+                          AND (c.ends_at IS NULL OR c.ends_at > :now)
+                          AND (
+                            c.pharmacy_scope = 'all'
+                            OR EXISTS (
+                              SELECT 1 FROM coupon_pharmacy cp
+                              WHERE cp.coupon_id = c.id AND cp.pharmacy_id = :pharmacy
+                            )
+                          )
+                        ORDER BY c.created_at DESC, c.id DESC
+                        """)
+                .param("now", timestamp(now))
+                .param("pharmacy", pharmacyId)
+                .query(CouponStore::map)
+                .list();
+    }
+
     public boolean pharmaciesExist(Collection<UUID> ids) {
         if (ids == null || ids.isEmpty()) {
             return true;

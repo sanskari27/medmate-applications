@@ -12,6 +12,7 @@ import in.medmate.pharmacy_server.shared.web.PageQuery;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Clock;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -118,6 +119,22 @@ public class CouponService {
                 orderTotal,
                 pharmacyId,
                 clock.instant()));
+    }
+
+    public CouponViews.StoreOffers forPharmacy(AccountPrincipal actor, String pharmacyId) {
+        if (!CouponAccess.customer(actor)) {
+            throw problem(HttpStatus.FORBIDDEN, "This action is not allowed.");
+        }
+        UUID id = pharmacyId(pharmacyId);
+        if (!coupons.pharmaciesExist(List.of(id))) {
+            throw problem(HttpStatus.NOT_FOUND, "Pharmacy was not found");
+        }
+        List<CouponViews.StoreOffer> offers = new ArrayList<>();
+        for (CouponStore.CouponRow row : coupons.accepting(id, clock.instant())) {
+            offers.add(new CouponViews.StoreOffer(
+                    row.id(), row.code(), row.title(), row.discountType(), money(row.discountValue())));
+        }
+        return new CouponViews.StoreOffers(offers);
     }
 
     public CouponViews.Preview preview(AccountPrincipal actor, JsonNode body) {
@@ -245,6 +262,17 @@ public class CouponService {
     private static void requireManage(AccountPrincipal actor) {
         if (!CouponAccess.manage(actor)) {
             throw problem(HttpStatus.FORBIDDEN, "This action is not allowed.");
+        }
+    }
+
+    private static UUID pharmacyId(String raw) {
+        if (raw == null || raw.isBlank()) {
+            throw problem(HttpStatus.NOT_FOUND, "Pharmacy was not found");
+        }
+        try {
+            return UUID.fromString(raw.trim());
+        } catch (IllegalArgumentException exception) {
+            throw problem(HttpStatus.NOT_FOUND, "Pharmacy was not found");
         }
     }
 

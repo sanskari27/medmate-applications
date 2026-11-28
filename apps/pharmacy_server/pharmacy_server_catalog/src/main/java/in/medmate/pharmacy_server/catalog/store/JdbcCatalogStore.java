@@ -218,6 +218,30 @@ public class JdbcCatalogStore implements CatalogStore {
     }
 
     @Override
+    public List<CatalogDocuments.ProductCategory> primaryCategories(List<String> productIds) {
+        if (productIds == null || productIds.isEmpty()) {
+            return List.of();
+        }
+        String ids = String.join(String.valueOf(ID_SEPARATOR), productIds);
+        return jdbc.sql(
+                        """
+                        SELECT DISTINCT ON (product_id) product_id, segment
+                        FROM (
+                          SELECT product_id, segment, position, 0 AS kind FROM drug_categories
+                          UNION ALL
+                          SELECT product_id, segment, position, 1 AS kind FROM otc_fmcg_categories
+                        ) labels
+                        WHERE product_id IN (SELECT unnest(string_to_array(:ids, :separator)))
+                        ORDER BY product_id, position, kind, lower(segment)
+                        """)
+                .param("ids", ids)
+                .param("separator", String.valueOf(ID_SEPARATOR))
+                .query((row, number) -> new CatalogDocuments.ProductCategory(
+                        row.getString("product_id"), row.getString("segment")))
+                .list();
+    }
+
+    @Override
     public List<String> categories() {
         return jdbc.sql(
                         """
