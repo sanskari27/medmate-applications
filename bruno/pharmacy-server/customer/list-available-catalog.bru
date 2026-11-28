@@ -34,9 +34,12 @@ tests {
 
 docs {
   Customer accounts only. A product is included when some pharmacy has a positive, unexpired batch.
-  category and q are optional. Each item has productId, name, displayName, price, image, and rxRequired.
+  category and q are optional. Items with an image are listed before items without one, then by name.
+  Each item has productId, name, displayName, price, image, rxRequired, marketerName, pack,
+  productForm, and composition. composition is the ingredient list for a drug and null for other products.
+  image, marketerName, pack, and productForm are null when the catalog has no value.
   price is the national catalog MRP. When the selected address has an approved pharmacy within 40 km
   that accepts online orders and has set an online price, the item also has pharmacyId, pharmacyName,
-  distanceKm, onlineMrp, onlinePrice, and deliveryCharge. deliveryCharge.amount is 0.00 until the
-  distance formula is configured. Those fields are null when no listing is in range.
+  distanceKm, onlineMrp, onlinePrice, and deliveryCharge. deliveryCharge.amount is 0.00 at 3 km or
+  nearer and 20.00 beyond that. Those fields are null when no listing is in range.
 }

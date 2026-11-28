@@ -63,8 +63,15 @@ class AvailableCatalogIT {
             statement.execute("TRUNCATE drugs, otc_fmcg CASCADE");
             statement.execute(
                     """
-                    INSERT INTO drugs (product_id, product_name, display_name, mrp, prescription_required)
-                    VALUES ('IN1', 'Crocin Advance', 'Crocin', 25.50, true)
+                    INSERT INTO drugs (
+                      product_id, product_name, display_name, mrp, prescription_required,
+                      marketer_name, package, product_form)
+                    VALUES ('IN1', 'Crocin Advance', 'Crocin', 25.50, true, 'GSK', 'Strip of 15 tablets', 'Tablet')
+                    """);
+            statement.execute(
+                    """
+                    INSERT INTO drug_ingredients (product_id, position, name, strength)
+                    VALUES ('IN1', 1, 'Paracetamol', '650mg')
                     """);
             statement.execute("INSERT INTO drug_categories (product_id, position, segment) VALUES ('IN1', 0, 'Pain')");
             statement.execute(
@@ -92,6 +99,13 @@ class AvailableCatalogIT {
                     "INSERT INTO otc_fmcg_categories (product_id, position, segment) VALUES ('FMCG1', 0, 'Pain')");
             statement.execute(
                     "INSERT INTO otc_fmcg_images (product_id, position, url) VALUES ('FMCG1', 0, 'https://img.example/wash.jpg')");
+            statement.execute(
+                    """
+                    INSERT INTO drugs (product_id, product_name, display_name, mrp, prescription_required)
+                    VALUES ('NOIMG', 'Aaa Plain', 'Plain', 8.00, false)
+                    """);
+            statement.execute(
+                    "INSERT INTO drug_categories (product_id, position, segment) VALUES ('NOIMG', 0, 'Pain')");
         }
         sms.clear();
     }
@@ -114,21 +128,32 @@ class AvailableCatalogIT {
 
         String customer = token(verify("9822001802", "customer", "login", false));
         JsonNode page = exchange(customer, "/api/v1/customer/catalog", HttpStatus.OK);
-        assertThat(page.get("total").asInt()).isEqualTo(2);
-        assertThat(ids(page)).containsExactly("IN1", "FMCG1");
+        assertThat(page.get("total").asInt()).isEqualTo(3);
+        assertThat(ids(page)).containsExactly("IN1", "FMCG1", "NOIMG");
         JsonNode drug = page.get("items").get(0);
         assertThat(drug.get("name").asText()).isEqualTo("Crocin Advance");
         assertThat(drug.get("displayName").asText()).isEqualTo("Crocin");
         assertThat(drug.get("price").decimalValue()).isEqualByComparingTo(new BigDecimal("25.50"));
         assertThat(drug.get("image").asText()).isEqualTo("https://img.example/crocin.jpg");
         assertThat(drug.get("rxRequired").asBoolean()).isTrue();
+        assertThat(drug.get("marketerName").asText()).isEqualTo("GSK");
+        assertThat(drug.get("pack").asText()).isEqualTo("Strip of 15 tablets");
+        assertThat(drug.get("productForm").asText()).isEqualTo("Tablet");
+        assertThat(drug.get("composition").asText()).isEqualTo("Paracetamol (650mg)");
         assertThat(drug.get("pharmacyId").isNull()).isTrue();
         assertThat(drug.get("deliveryCharge").isNull()).isTrue();
         assertThat(page.get("items").get(1).get("rxRequired").asBoolean()).isFalse();
+        assertThat(page.get("items").get(1).get("composition").isNull()).isTrue();
         assertThat(page.get("items").get(1).get("image").asText()).isEqualTo("https://img.example/wash.jpg");
 
         assertThat(ids(exchange(customer, "/api/v1/customer/catalog?category=pain", HttpStatus.OK)))
-                .containsExactly("IN1", "FMCG1");
+                .containsExactly("IN1", "FMCG1", "NOIMG");
+        assertThat(exchange(customer, "/api/v1/customer/catalog?q=plain", HttpStatus.OK)
+                        .get("items")
+                        .get(0)
+                        .get("image")
+                        .isNull())
+                .isTrue();
         assertThat(ids(exchange(customer, "/api/v1/customer/catalog?q=crocin", HttpStatus.OK)))
                 .containsExactly("IN1");
         assertThat(ids(exchange(customer, "/api/v1/customer/catalog?category=Skin&q=wash", HttpStatus.OK)))
@@ -201,6 +226,11 @@ class AvailableCatalogIT {
             statement.execute(
                     "INSERT INTO inventory_batch (pharmacy_id, product_id, batch_no, expiry, qty, rate, mrp) VALUES ('"
                             + pharmacyId + "', 'EXP1', 'B1', '2000-01', 5, 10.00, 30.00)");
+            statement.execute("INSERT INTO inventory_product (pharmacy_id, product_id, name, reorder_level) VALUES ('"
+                    + pharmacyId + "', 'NOIMG', 'Aaa Plain', 1)");
+            statement.execute(
+                    "INSERT INTO inventory_batch (pharmacy_id, product_id, batch_no, expiry, qty, rate, mrp) VALUES ('"
+                            + pharmacyId + "', 'NOIMG', 'B1', '2099-01', 3, 4.00, 8.00)");
             statement.execute("INSERT INTO inventory_product (pharmacy_id, product_id, name, reorder_level) VALUES ('"
                     + pharmacyId + "', 'FMCG1', 'Daily Wash', 1)");
             statement.execute(

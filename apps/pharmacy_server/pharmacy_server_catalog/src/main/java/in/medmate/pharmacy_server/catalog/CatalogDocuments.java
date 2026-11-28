@@ -115,7 +115,16 @@ public final class CatalogDocuments {
     public record CatalogList(SummaryPage<DrugSummary> drug, SummaryPage<FmcgSummary> fmcg) {}
 
     public record AvailableItem(
-            String productId, String name, String displayName, BigDecimal price, String image, boolean rxRequired) {}
+            String productId,
+            String name,
+            String displayName,
+            BigDecimal price,
+            String image,
+            boolean rxRequired,
+            String marketerName,
+            String pack,
+            String productForm,
+            String composition) {}
 
     public record AvailablePage(List<AvailableItem> items, int page, int size, int total) {}
 

@@ -60,7 +60,11 @@ class CustomerCatalogControllerTest {
                                 "Crocin",
                                 new BigDecimal("25.50"),
                                 "https://img.example/crocin.jpg",
-                                true)),
+                                true,
+                                "GSK",
+                                "Strip of 15 tablets",
+                                "Tablet",
+                                "Paracetamol (650mg)")),
                         1,
                         25,
                         1));
@@ -81,6 +85,10 @@ class CustomerCatalogControllerTest {
                 .andExpect(jsonPath("$.items[0].price").value(25.50))
                 .andExpect(jsonPath("$.items[0].image").value("https://img.example/crocin.jpg"))
                 .andExpect(jsonPath("$.items[0].rxRequired").value(true))
+                .andExpect(jsonPath("$.items[0].marketerName").value("GSK"))
+                .andExpect(jsonPath("$.items[0].pack").value("Strip of 15 tablets"))
+                .andExpect(jsonPath("$.items[0].productForm").value("Tablet"))
+                .andExpect(jsonPath("$.items[0].composition").value("Paracetamol (650mg)"))
                 .andExpect(jsonPath("$.total").value(1));
     }
 

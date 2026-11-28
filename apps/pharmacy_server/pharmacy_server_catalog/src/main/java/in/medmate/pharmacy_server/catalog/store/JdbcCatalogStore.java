@@ -71,7 +71,18 @@ public class JdbcCatalogStore implements CatalogStore {
                      d.mrp AS price,
                      (SELECT i.url FROM drug_images i
                       WHERE i.product_id = d.product_id ORDER BY i.position LIMIT 1) AS image,
-                     d.prescription_required AS rx_required
+                     d.prescription_required AS rx_required,
+                     d.marketer_name,
+                     d.package AS pack,
+                     d.product_form,
+                     (SELECT string_agg(
+                               CASE
+                                 WHEN NULLIF(btrim(ingredient.strength), '') IS NULL THEN btrim(ingredient.name)
+                                 ELSE btrim(ingredient.name) || ' (' || btrim(ingredient.strength) || ')'
+                               END,
+                               ' + ' ORDER BY ingredient.position)
+                      FROM drug_ingredients ingredient
+                      WHERE ingredient.product_id = d.product_id) AS composition
               FROM drugs d
               WHERE d.product_id IN (SELECT unnest(string_to_array(:ids, :separator)))
                 AND (CAST(:category AS text) = '' OR EXISTS (
@@ -88,7 +99,11 @@ public class JdbcCatalogStore implements CatalogStore {
                      f.mrp,
                      (SELECT i.url FROM otc_fmcg_images i
                       WHERE i.product_id = f.product_id ORDER BY i.position LIMIT 1),
-                     FALSE
+                     FALSE,
+                     f.marketer_name,
+                     f.package,
+                     f.product_form,
+                     NULL::text
               FROM otc_fmcg f
               WHERE f.product_id IN (SELECT unnest(string_to_array(:ids, :separator)))
                 AND (CAST(:category AS text) = '' OR EXISTS (
@@ -182,11 +197,14 @@ public class JdbcCatalogStore implements CatalogStore {
         List<CatalogDocuments.AvailableItem> items = bound(
                         jdbc.sql(
                                 """
-                                SELECT product_id, name, display_name, price, image, rx_required
+                                SELECT product_id, name, display_name, price, image, rx_required,
+                                       marketer_name, pack, product_form, composition
                                 """
                                         + AVAILABLE_FROM
                                         + """
-                                        ORDER BY lower(COALESCE(name, '')), product_id
+                                        ORDER BY CASE WHEN btrim(COALESCE(image, '')) = '' THEN 1 ELSE 0 END,
+                                                 lower(COALESCE(name, '')),
+                                                 product_id
                                         LIMIT :limit OFFSET :offset
                                         """),
                         ids,
@@ -1637,7 +1655,19 @@ public class JdbcCatalogStore implements CatalogStore {
                 row.getString("display_name"),
                 row.getBigDecimal("price"),
                 row.getString("image"),
-                row.getBoolean("rx_required"));
+                row.getBoolean("rx_required"),
+                text(row.getString("marketer_name")),
+                text(row.getString("pack")),
+                text(row.getString("product_form")),
+                text(row.getString("composition")));
+    }
+
+    private static String text(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private record DrugParent(
