@@ -1,0 +1,86 @@
+meta {
+  name: Read catalog product
+  type: http
+  seq: 12
+}
+
+get {
+  url: {{baseUrl}}/api/v1/customer/catalog/{{catalogProductId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Request-Id: {{exampleRequestId}}
+}
+
+tests {
+  test("a customer reads one in-stock catalog product", function() {
+    if (!bru.getEnvVar("accessToken")) {
+      expect(res.getStatus()).to.equal(401);
+      expect(res.body.detail).to.equal("Sign in is required");
+      return;
+    }
+    if (res.getStatus() === 403) {
+      expect(res.body.detail).to.equal("This action is not allowed.");
+      return;
+    }
+    if (!bru.getEnvVar("catalogProductId")) {
+      expect(res.getStatus()).to.equal(404);
+      expect(res.body.detail).to.equal("Product was not found");
+      return;
+    }
+    expect(res.getStatus()).to.equal(200);
+    expect(res.body.productId).to.equal(bru.getEnvVar("catalogProductId"));
+    expect(res.body.name).to.be.a("string");
+    expect(res.body.rxRequired).to.be.a("boolean");
+    expect(res.body.categories).to.be.an("array");
+    expect(res.body.images).to.be.an("array");
+    expect(res.body.uses).to.be.an("array");
+    expect(res.body.sideEffects).to.be.an("array");
+    expect(res.body.safety).to.be.an("array");
+    expect(res.body.questions).to.be.an("array");
+    expect(res.body.offers).to.be.an("array");
+    expect(res.body.similar).to.be.an("array");
+    expect(res.body.similar.length).to.be.at.most(8);
+    if (res.body.mrp !== null) {
+      expect(res.body.mrp).to.match(/^\d+\.\d{2}$/);
+    }
+    res.body.offers.forEach(function(offer) {
+      expect(offer.pharmacyId).to.be.a("string").that.is.not.empty;
+      expect(offer.onlinePrice).to.match(/^\d+\.\d{2}$/);
+      expect(offer.onlineMrp).to.match(/^\d+\.\d{2}$/);
+      expect(offer.deliveryCharge.amount).to.match(/^\d+\.\d{2}$/);
+      expect(offer.closed).to.be.a("boolean");
+      if (offer.closed) {
+        expect(offer.closesOn).to.equal(null);
+      } else {
+        expect(offer.closesOn).to.match(/^\d{2}:\d{2}$/);
+      }
+    });
+    res.body.similar.forEach(function(item) {
+      expect(item.productId).to.be.a("string").that.is.not.empty;
+      expect(item.productId).to.not.equal(res.body.productId);
+    });
+  });
+}
+
+docs {
+  Customer accounts only. A pharmacy token is forbidden.
+  Run List available catalog first so catalogProductId is set. An unknown, blank, or out-of-stock id is 404
+  with detail "Product was not found".
+  The product must have a positive, unexpired batch this month.
+  Drug copy fills introduction, benefits, howToUse, ifMiss, storage, sideEffects, and questions.
+  composition is the ingredient list, with strength in parentheses when the catalog has one.
+  An FMCG product uses information, benefits, and directions as introduction, benefits, and howToUse.
+  ifMiss, storage, and questions are empty for FMCG, rxRequired is false, and composition joins ingredients with " + ".
+  mrp is the national catalog MRP as money, or null.
+  offers are pharmacies within 40 km of the selected address that accept online orders and have a positive
+  online listing, nearest first. deliveryCharge.amount is 0.00 at 3 km or nearer and 20.00 beyond that.
+  With no selected address, or no pin on it, offers is empty.
+  licenceNumber, pharmacistName, and city are null when unset. closed and closesOn follow Asia/Kolkata hours:
+  closed is true when today is closed, hours are unset, or the request is outside today's window, and closesOn is null then.
+  similar is up to 8 other in-stock products in the first category, with the same item fields as the catalog list.
+  A product with no category has an empty similar list.
+}

@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,5 +28,10 @@ public class CustomerCatalogController {
             @RequestParam(required = false) String page,
             @RequestParam(required = false) String size) {
         return catalog.list(Current.require(authentication), category, q, page, size);
+    }
+
+    @GetMapping("/api/v1/customer/catalog/{productId}")
+    public CustomerCatalogViews.Detail product(Authentication authentication, @PathVariable String productId) {
+        return catalog.product(Current.require(authentication), productId);
     }
 }
