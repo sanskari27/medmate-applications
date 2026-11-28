@@ -5,6 +5,7 @@ import { Heading } from "@/components/ui/Heading";
 import { Input, inputVariants } from "@/components/ui/Input";
 import { Stack } from "@/components/ui/Stack";
 import { Text } from "@/components/ui/Text";
+import { cn } from "@/utils/className";
 import { DialogClose, useModalDialog } from "../../dialog";
 import {
   blankCategory,
@@ -15,7 +16,7 @@ import {
 } from "../../model";
 
 const dialogClass =
-  "m-auto max-h-[min(92dvh,860px)] w-[min(720px,calc(100%-2rem))] overflow-auto overscroll-contain rounded-xl border-0 bg-paper p-0 text-ink shadow-pop backdrop:overflow-hidden backdrop:bg-[rgba(13,32,21,0.5)] backdrop:backdrop-blur-[3px] backdrop:overscroll-contain";
+  "m-auto max-h-[min(92dvh,860px)] w-[min(920px,calc(100%-2rem))] overflow-hidden overscroll-contain rounded-xl border-0 bg-paper p-0 text-ink shadow-pop open:flex open:flex-col backdrop:overflow-hidden backdrop:bg-[rgba(13,32,21,0.5)] backdrop:backdrop-blur-[3px] backdrop:overscroll-contain";
 
 const accept = "image/jpeg,image/png,image/webp";
 
@@ -74,149 +75,202 @@ export function SectionDialog({
 
   return (
     <dialog ref={dialogRef} aria-labelledby="section-dialog-title" className={dialogClass}>
-      <div aria-hidden className="h-1.5 w-full bg-mid" />
+      <div aria-hidden className="h-1.5 w-full shrink-0 bg-mid" />
       <DialogClose.Provider value={close}>
-        <form className="grid gap-4 px-5 py-5" onSubmit={submit}>
-          <Heading id="section-dialog-title" level={1} className="text-[1.25em]">
-            {creating ? "Add section" : "Edit section"}
-          </Heading>
-          <Field label="Name" htmlFor="section-name" hint="Shown as the section heading in the app">
-            <Input
-              id="section-name"
-              name="title"
-              autoFocus
-              required
-              value={current.title}
-              onChange={(event) => {
-                setLocalError(null);
-                setCurrent((value) => ({ ...value, title: event.target.value }));
-              }}
-            />
-          </Field>
-          <Field label="Position" htmlFor="section-position" hint="Lower numbers appear first">
-            <Input
-              id="section-position"
-              name="position"
-              inputMode="numeric"
-              required
-              value={current.position}
-              onChange={(event) => {
-                setLocalError(null);
-                setCurrent((value) => ({ ...value, position: event.target.value }));
-              }}
-            />
-          </Field>
-          <Field
-            label="Image"
-            htmlFor="section-image"
-            hint={
-              creating
-                ? "JPEG, PNG, or WebP, up to 2 MB. Shown beside the section name."
-                : "Leave empty to keep the current image"
-            }
-          >
-            <Input
-              id="section-image"
-              name="image"
-              type="file"
-              accept={accept}
-              required={creating}
-              onChange={(event) => {
-                setLocalError(null);
-                setCurrent((value) => ({ ...value, image: event.target.files?.[0] ?? null }));
-              }}
-            />
-          </Field>
-          <MediaPreview
-            file={current.image}
-            url={section?.image.url}
-            className="size-40 rounded-md object-cover"
-          />
-          <Field
-            label="Banner"
-            htmlFor="section-banner"
-            hint={
-              creating
-                ? "JPEG, PNG, or WebP, up to 2 MB. Shown across the top of the section."
-                : "Leave empty to keep the current banner"
-            }
-          >
-            <Input
-              id="section-banner"
-              name="banner"
-              type="file"
-              accept={accept}
-              required={creating}
-              onChange={(event) => {
-                setLocalError(null);
-                setCurrent((value) => ({ ...value, banner: event.target.files?.[0] ?? null }));
-              }}
-            />
-          </Field>
-          <MediaPreview
-            file={current.banner}
-            url={section?.banner.url}
-            className="h-28 w-full rounded-md object-cover"
-          />
-          <Stack className="gap-3">
-            {current.categories.map((category, index) => (
-              <CategoryFields
-                key={category.key}
-                index={index}
-                category={category}
-                categories={categories}
-                taken={current.categories
-                  .filter((item) => item.key !== category.key)
-                  .map((item) => item.category)}
-                categoriesLoading={categoriesLoading}
-                removable={current.categories.length > 1}
-                onChange={(next) => updateCategory(category.key, next)}
-                onRemove={() => {
+        <form className="flex min-h-0 flex-1 flex-col" onSubmit={submit}>
+          <header className="flex items-start justify-between gap-3 border-b border-line px-5 py-4">
+            <div className="min-w-0">
+              <Heading id="section-dialog-title" level={1} className="text-[1.25em]">
+                {creating ? "Add section" : "Edit section"}
+              </Heading>
+              <Text variant="muted" className="mt-1">
+                Name, artwork, and the categories shown in this home row.
+              </Text>
+            </div>
+            <Button type="button" variant="ghost" size="sm" onClick={close}>
+              Close
+            </Button>
+          </header>
+          <div className="grid min-h-0 flex-1 content-start gap-5 overflow-auto overscroll-contain px-5 py-5">
+            <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_7.5rem]">
+              <Field
+                label="Name"
+                htmlFor="section-name"
+                hint="Shown as the section heading in the app"
+              >
+                <Input
+                  id="section-name"
+                  name="title"
+                  autoFocus
+                  required
+                  value={current.title}
+                  onChange={(event) => {
+                    setLocalError(null);
+                    setCurrent((value) => ({ ...value, title: event.target.value }));
+                  }}
+                />
+              </Field>
+              <Field label="Position" htmlFor="section-position" hint="Lower is first">
+                <Input
+                  id="section-position"
+                  name="position"
+                  inputMode="numeric"
+                  required
+                  value={current.position}
+                  onChange={(event) => {
+                    setLocalError(null);
+                    setCurrent((value) => ({ ...value, position: event.target.value }));
+                  }}
+                />
+              </Field>
+            </div>
+            <div className="grid gap-4 md:grid-cols-[minmax(0,1.6fr)_11rem]">
+              <MediaField
+                id="section-banner"
+                name="banner"
+                label="Banner"
+                hint={
+                  creating
+                    ? "JPEG, PNG, or WebP, up to 2 MB. Wide image across the top of the row."
+                    : "Leave empty to keep the current banner"
+                }
+                required={creating}
+                file={current.banner}
+                url={section?.banner.url}
+                frameClass="h-36 w-full"
+                onChange={(file) => {
                   setLocalError(null);
-                  setCurrent((value) => ({
-                    ...value,
-                    categories: value.categories.filter((item) => item.key !== category.key),
-                  }));
+                  setCurrent((value) => ({ ...value, banner: file }));
                 }}
               />
-            ))}
-            <Button
-              type="button"
-              size="sm"
-              variant="line"
-              className="justify-self-start"
-              onClick={() => {
-                setLocalError(null);
-                setCurrent((value) => ({
-                  ...value,
-                  categories: [...value.categories, blankCategory()],
-                }));
-              }}
-            >
-              Add category
-            </Button>
-          </Stack>
-          {!categoriesLoading && categories.length === 0 ? (
-            <Text className="text-[13px] text-muted">
-              Add a category on a catalog product before creating a section.
-            </Text>
-          ) : null}
-          {message ? (
-            <Text role="alert" className="text-[12.5px] font-bold text-rose">
-              {message}
-            </Text>
-          ) : null}
-          <Stack direction="row" className="justify-end gap-2">
-            <Button type="button" variant="ghost" onClick={close}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={saving || categories.length === 0}>
-              Save section
-            </Button>
-          </Stack>
+              <MediaField
+                id="section-image"
+                name="image"
+                label="Image"
+                hint={creating ? "Square icon beside the name." : "Leave empty to keep it"}
+                required={creating}
+                file={current.image}
+                url={section?.image.url}
+                frameClass="size-28"
+                onChange={(file) => {
+                  setLocalError(null);
+                  setCurrent((value) => ({ ...value, image: file }));
+                }}
+              />
+            </div>
+            <section className="grid gap-3">
+              <div className="flex flex-wrap items-end justify-between gap-2">
+                <div>
+                  <Heading level={3} className="text-[15px]">
+                    Categories
+                  </Heading>
+                  <Text variant="muted" className="mt-0.5">
+                    Each category needs at least one image. Extra images rotate in the app.
+                  </Text>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="line"
+                  onClick={() => {
+                    setLocalError(null);
+                    setCurrent((value) => ({
+                      ...value,
+                      categories: [...value.categories, blankCategory()],
+                    }));
+                  }}
+                >
+                  Add category
+                </Button>
+              </div>
+              {current.categories.map((category, index) => (
+                <CategoryFields
+                  key={category.key}
+                  index={index}
+                  category={category}
+                  categories={categories}
+                  taken={current.categories
+                    .filter((item) => item.key !== category.key)
+                    .map((item) => item.category)}
+                  categoriesLoading={categoriesLoading}
+                  removable={current.categories.length > 1}
+                  onChange={(next) => updateCategory(category.key, next)}
+                  onRemove={() => {
+                    setLocalError(null);
+                    setCurrent((value) => ({
+                      ...value,
+                      categories: value.categories.filter((item) => item.key !== category.key),
+                    }));
+                  }}
+                />
+              ))}
+              {!categoriesLoading && categories.length === 0 ? (
+                <Text className="text-[13px] text-muted">
+                  Add a category on a catalog product before creating a section.
+                </Text>
+              ) : null}
+            </section>
+          </div>
+          <footer className="flex flex-wrap items-center justify-end gap-3 border-t border-line px-5 py-3">
+            {message ? (
+              <Text role="alert" className="mr-auto text-[12.5px] font-bold text-rose">
+                {message}
+              </Text>
+            ) : null}
+            <Stack direction="row" className="gap-2">
+              <Button type="button" variant="ghost" onClick={close}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={saving || categories.length === 0}>
+                Save section
+              </Button>
+            </Stack>
+          </footer>
         </form>
       </DialogClose.Provider>
     </dialog>
+  );
+}
+
+function MediaField({
+  id,
+  name,
+  label,
+  hint,
+  required,
+  file,
+  url,
+  frameClass,
+  onChange,
+}: {
+  id: string;
+  name: string;
+  label: string;
+  hint: string;
+  required: boolean;
+  file: File | null;
+  url?: string | null;
+  frameClass: string;
+  onChange: (file: File | null) => void;
+}) {
+  return (
+    <Field label={label} htmlFor={id} hint={hint}>
+      <div className="relative overflow-hidden rounded-md border border-dashed border-line-2 bg-canvas">
+        <MediaPreview file={file} url={url} className={cn(frameClass, "object-cover")} />
+        <Input
+          id={id}
+          name={name}
+          type="file"
+          accept={accept}
+          required={required}
+          className="absolute inset-0 h-full cursor-pointer opacity-0 file:hidden"
+          onChange={(event) => onChange(event.target.files?.[0] ?? null)}
+        />
+        <span className="pointer-events-none absolute right-2 bottom-2 rounded-xs bg-paper/95 px-2 py-1 text-[11px] font-bold text-ink-2 shadow-sm">
+          {file || url ? "Replace" : "Upload"}
+        </span>
+      </div>
+    </Field>
   );
 }
 
@@ -246,75 +300,55 @@ function CategoryFields({
       ? [category.category, ...available]
       : available;
   const selectId = `section-category-${category.key}`;
+  const imagesId = `section-category-images-${category.key}`;
 
   return (
-    <fieldset className="grid gap-3 rounded-lg border border-line p-3">
-      <legend className="px-1 text-[13px] font-bold text-ink">Category {index + 1}</legend>
-      {removable ? (
-        <Button
-          type="button"
-          size="sm"
-          variant="ghost"
-          className="justify-self-end"
-          onClick={onRemove}
+    <div className="grid gap-3 rounded-lg border border-line bg-paper p-3">
+      <div className="flex items-start gap-3">
+        <span
+          aria-hidden
+          className="mt-8 grid size-6 shrink-0 place-items-center rounded-full bg-wash text-[12px] font-bold text-mid"
         >
-          Remove
-        </Button>
-      ) : null}
-      <Field
-        label="Category"
-        htmlFor={selectId}
-        hint="Categories already used on a drug or FMCG product"
-      >
-        <select
-          id={selectId}
-          className={inputVariants()}
-          required
-          value={category.category}
-          disabled={categoriesLoading || choices.length === 0}
-          onChange={(event) => onChange({ ...category, category: event.target.value })}
+          {index + 1}
+        </span>
+        <Field
+          className="min-w-0 flex-1"
+          label="Category"
+          htmlFor={selectId}
+          hint="Categories already used on a drug or FMCG product"
         >
-          <option value="">{categoriesLoading ? "Loading categories" : "Choose a category"}</option>
-          {choices.map((name) => (
-            <option key={name} value={name}>
-              {name}
+          <select
+            id={selectId}
+            data-slot="select"
+            className={inputVariants()}
+            required
+            value={category.category}
+            disabled={categoriesLoading || choices.length === 0}
+            onChange={(event) => onChange({ ...category, category: event.target.value })}
+          >
+            <option value="">
+              {categoriesLoading ? "Loading categories" : "Choose a category"}
             </option>
-          ))}
-        </select>
-      </Field>
-      <Field
-        label="Images"
-        htmlFor={`section-category-images-${category.key}`}
-        hint="JPEG, PNG, or WebP, up to 2 MB each. Add more than one to rotate inside this category."
-      >
-        <Input
-          id={`section-category-images-${category.key}`}
-          type="file"
-          accept={accept}
-          multiple
-          onChange={(event) => {
-            const files = Array.from(event.target.files ?? []);
-            event.target.value = "";
-            if (files.length === 0) return;
-            onChange({
-              ...category,
-              images: [
-                ...category.images,
-                ...files.map((file) => ({
-                  key: crypto.randomUUID(),
-                  id: null,
-                  file,
-                  url: null,
-                })),
-              ],
-            });
-          }}
-        />
-      </Field>
-      {category.images.length > 0 ? (
-        <div className="flex flex-wrap gap-3">
+            {choices.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </Field>
+        {removable ? (
+          <Button type="button" size="sm" variant="ghost" className="mt-7" onClick={onRemove}>
+            Remove
+          </Button>
+        ) : null}
+      </div>
+      <div className="grid gap-1.5 pl-9">
+        <label htmlFor={imagesId} className="text-[11.5px] font-bold tracking-wide text-ink-2">
+          Images
+        </label>
+        <div className="flex flex-wrap items-start gap-2">
           {category.images.map((image) => (
-            <div key={image.key} className="grid justify-items-start gap-1">
+            <div key={image.key} className="relative">
               <MediaPreview
                 file={image.file}
                 url={image.url}
@@ -323,7 +357,9 @@ function CategoryFields({
               <Button
                 type="button"
                 size="sm"
-                variant="ghost"
+                variant="rose"
+                aria-label="Remove image"
+                className="absolute -top-2 -right-2 size-6 rounded-full p-0"
                 onClick={() =>
                   onChange({
                     ...category,
@@ -331,13 +367,44 @@ function CategoryFields({
                   })
                 }
               >
-                Remove image
+                ×
               </Button>
             </div>
           ))}
+          <label
+            htmlFor={imagesId}
+            className="grid size-16 cursor-pointer place-items-center rounded-md border border-dashed border-line-2 bg-canvas text-[12px] font-bold text-mid transition-colors duration-200 hover:border-mid hover:bg-wash"
+          >
+            Add
+            <input
+              id={imagesId}
+              className="sr-only"
+              type="file"
+              accept={accept}
+              multiple
+              onChange={(event) => {
+                const files = Array.from(event.target.files ?? []);
+                event.target.value = "";
+                if (files.length === 0) return;
+                onChange({
+                  ...category,
+                  images: [
+                    ...category.images,
+                    ...files.map((file) => ({
+                      key: crypto.randomUUID(),
+                      id: null,
+                      file,
+                      url: null,
+                    })),
+                  ],
+                });
+              }}
+            />
+          </label>
         </div>
-      ) : null}
-    </fieldset>
+        <Text variant="caption">JPEG, PNG, or WebP, up to 2 MB each.</Text>
+      </div>
+    </div>
   );
 }
 
@@ -361,6 +428,17 @@ function MediaPreview({
     return () => URL.revokeObjectURL(next);
   }, [file]);
   const shown = local ?? url;
-  if (!shown) return null;
+  if (!shown) {
+    return (
+      <div
+        className={cn(
+          className,
+          "grid place-items-center bg-canvas text-[12px] font-bold text-muted",
+        )}
+      >
+        No image
+      </div>
+    );
+  }
   return <img src={shown} alt="" className={className} />;
 }

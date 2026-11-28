@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { EmptyState } from "@/components/feedback/EmptyState";
 import { Heading } from "@/components/ui/Heading";
 import { Stack } from "@/components/ui/Stack";
 import { Text } from "@/components/ui/Text";
@@ -56,12 +57,18 @@ export function AppSectionsPage() {
   return (
     <Stack className="gap-4">
       <Stack direction="row" align="center" className="justify-between gap-3">
-        <Heading level={2} className="text-[18px]">
-          App sections
-        </Heading>
+        <div className="min-w-0">
+          <Heading level={2} className="text-[18px]">
+            App sections
+          </Heading>
+          <Text variant="muted" className="mt-0.5">
+            Home rows in the mobile app, in the order shoppers see them.
+          </Text>
+        </div>
         <Button
           type="button"
           size="sm"
+          className="shrink-0"
           onClick={() => {
             setDialogError(null);
             setEditing("new");
@@ -70,10 +77,6 @@ export function AppSectionsPage() {
           Add section
         </Button>
       </Stack>
-      <Text className="text-[13.5px] text-muted">
-        Home sections for the mobile app. Each section has an image, a banner, and the categories
-        shown inside it.
-      </Text>
       {sections.isError ? (
         <Text role="alert" className="text-[13.5px] font-bold text-rose">
           {problemMessage(sections.error, "Could not load sections")}
@@ -83,54 +86,45 @@ export function AppSectionsPage() {
         <Text className="text-[13.5px] text-muted">Loading sections</Text>
       ) : null}
       {!sections.isLoading && !sections.isError && rows.length === 0 ? (
-        <Text className="text-[13.5px] text-muted">No sections yet.</Text>
+        <EmptyState
+          title="No sections yet"
+          body="Add a section with a banner, an icon, and the categories that belong in that row."
+        />
       ) : null}
       {!sections.isLoading && !sections.isError && rows.length > 0 ? (
-        <div className="grid max-w-3xl gap-4">
+        <div className="grid gap-4">
           {rows.map((section) => (
             <article
               key={section.id}
-              className="overflow-hidden rounded-lg border border-line bg-paper"
+              className="overflow-hidden rounded-lg border border-line bg-paper shadow-sm"
             >
-              <img
-                src={section.banner.url}
-                alt=""
-                width={768}
-                height={144}
-                className="h-36 w-full object-cover"
-              />
-              <div className="grid gap-3 p-3">
-                <div className="flex items-center gap-3">
-                  <img
-                    src={section.image.url}
-                    alt=""
-                    width={64}
-                    height={64}
-                    className="size-16 rounded-md object-cover"
-                  />
-                  <div>
-                    <Text className="text-[15px] font-bold text-ink">{section.title}</Text>
-                    <Text className="text-[12px] text-muted">Position {section.position}</Text>
-                  </div>
-                </div>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {section.categories.map((category) => (
-                    <div key={category.id} className="grid gap-2 rounded-md border border-line p-2">
-                      <Text className="text-[13px] font-bold text-ink">{category.category}</Text>
-                      <div className="flex flex-wrap gap-2">
-                        {category.images.map((image) => (
-                          <img
-                            key={image.id}
-                            src={image.url}
-                            alt=""
-                            width={56}
-                            height={56}
-                            className="size-14 rounded-md object-cover"
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+              <div className="relative bg-canvas">
+                <img
+                  src={section.banner.url}
+                  alt=""
+                  width={1200}
+                  height={280}
+                  className="h-32 w-full object-cover sm:h-36"
+                />
+                <span className="absolute top-3 left-3 rounded-full bg-paper/95 px-2.5 py-1 text-[12px] font-bold text-ink shadow-sm">
+                  Position {section.position}
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center gap-3 px-4 py-3">
+                <img
+                  src={section.image.url}
+                  alt=""
+                  width={48}
+                  height={48}
+                  className="size-12 shrink-0 rounded-md border border-line object-cover"
+                />
+                <div className="min-w-0 flex-1">
+                  <Text className="truncate text-[15px] font-bold text-ink">{section.title}</Text>
+                  <Text variant="muted" className="mt-0.5">
+                    {section.categories.length === 1
+                      ? "1 category"
+                      : `${section.categories.length} categories`}
+                  </Text>
                 </div>
                 <Stack direction="row" className="gap-2">
                   <Button
@@ -154,6 +148,34 @@ export function AppSectionsPage() {
                   </Button>
                 </Stack>
               </div>
+              {section.categories.length > 0 ? (
+                <ul className="flex gap-2 overflow-x-auto border-t border-line px-4 py-3">
+                  {section.categories.map((category) => {
+                    const cover = category.images[0];
+                    const extra = Math.max(0, category.images.length - 1);
+                    return (
+                      <li
+                        key={category.id}
+                        className="flex shrink-0 items-center gap-2 rounded-md bg-canvas px-2 py-1.5"
+                      >
+                        {cover ? (
+                          <img
+                            src={cover.url}
+                            alt=""
+                            width={32}
+                            height={32}
+                            className="size-8 rounded-xs object-cover"
+                          />
+                        ) : null}
+                        <span className="text-[13px] font-bold text-ink">{category.category}</span>
+                        {extra > 0 ? (
+                          <span className="text-[12px] font-bold text-muted">+{extra}</span>
+                        ) : null}
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : null}
             </article>
           ))}
         </div>
