@@ -150,8 +150,7 @@ class CouponControllerTest {
     void aCustomerSeesCouponsAPharmacyAccepts() throws Exception {
         UUID pharmacy = UUID.fromString("00000000-0000-4000-8000-0000000000b1");
         AccountAuthentication customer = account(AccountType.CUSTOMER, Set.of(), false);
-        mvc.perform(get("/api/v1/customer/pharmacies/" + pharmacy + "/coupons"))
-                .andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/v1/customer/pharmacies/" + pharmacy + "/coupons")).andExpect(status().isUnauthorized());
         mvc.perform(get("/api/v1/customer/pharmacies/" + pharmacy + "/coupons")
                         .principal(account(AccountType.PHARMACY, Set.of(), false)))
                 .andExpect(status().isForbidden())

@@ -236,8 +236,8 @@ public class JdbcCatalogStore implements CatalogStore {
                         """)
                 .param("ids", ids)
                 .param("separator", String.valueOf(ID_SEPARATOR))
-                .query((row, number) -> new CatalogDocuments.ProductCategory(
-                        row.getString("product_id"), row.getString("segment")))
+                .query((row, number) ->
+                        new CatalogDocuments.ProductCategory(row.getString("product_id"), row.getString("segment")))
                 .list();
     }
 

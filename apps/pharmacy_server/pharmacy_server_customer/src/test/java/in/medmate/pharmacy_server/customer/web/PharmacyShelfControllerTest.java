@@ -65,10 +65,8 @@ class PharmacyShelfControllerTest {
     @Test
     void onlyACustomerWithANearbyOnlinePharmacyCanReadItsShelf() throws Exception {
         mvc.perform(get(SHELF)).andExpect(status().isUnauthorized());
-        mvc.perform(get(SHELF).principal(account(AccountType.PHARMACY, false)))
-                .andExpect(status().isForbidden());
-        mvc.perform(get(SHELF).principal(account(AccountType.CUSTOMER, true)))
-                .andExpect(status().isForbidden());
+        mvc.perform(get(SHELF).principal(account(AccountType.PHARMACY, false))).andExpect(status().isForbidden());
+        mvc.perform(get(SHELF).principal(account(AccountType.CUSTOMER, true))).andExpect(status().isForbidden());
         mvc.perform(get("/api/v1/customer/pharmacies/not-a-uuid/catalog").principal(customer()))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.detail").value("Pharmacy was not found"));
@@ -185,7 +183,11 @@ class PharmacyShelfControllerTest {
                 .andExpect(jsonPath("$.items.length()").value(1))
                 .andExpect(jsonPath("$.items[0].productId").value("F3"))
                 .andExpect(jsonPath("$.categories.length()").value(4));
-        mvc.perform(get(SHELF).principal(customer()).param("category", "Fever & Pain").param("page", "3").param("size", "3"))
+        mvc.perform(get(SHELF)
+                        .principal(customer())
+                        .param("category", "Fever & Pain")
+                        .param("page", "3")
+                        .param("size", "3"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items.length()").value(0))
                 .andExpect(jsonPath("$.total").value(4));
@@ -194,7 +196,10 @@ class PharmacyShelfControllerTest {
                 .andExpect(jsonPath("$.items.length()").value(0))
                 .andExpect(jsonPath("$.total").value(0))
                 .andExpect(jsonPath("$.size").value(25));
-        mvc.perform(get(SHELF).principal(customer()).param("category", "Baby care").param("page", "0"))
+        mvc.perform(get(SHELF)
+                        .principal(customer())
+                        .param("category", "Baby care")
+                        .param("page", "0"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value("Page is not valid"));
 
@@ -203,7 +208,11 @@ class PharmacyShelfControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.categories.length()").value(0))
                 .andExpect(jsonPath("$.total").value(0));
-        mvc.perform(get(SHELF).principal(customer()).param("category", "Baby care").param("page", "2").param("size", "1"))
+        mvc.perform(get(SHELF)
+                        .principal(customer())
+                        .param("category", "Baby care")
+                        .param("page", "2")
+                        .param("size", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.page").value(2))
                 .andExpect(jsonPath("$.size").value(1))

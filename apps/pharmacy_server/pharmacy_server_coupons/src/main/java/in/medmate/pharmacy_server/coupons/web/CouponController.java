@@ -64,8 +64,7 @@ public class CouponController {
     }
 
     @GetMapping("/api/v1/customer/pharmacies/{pharmacyId}/coupons")
-    public CouponViews.StoreOffers pharmacy(
-            Authentication authentication, @PathVariable String pharmacyId) {
+    public CouponViews.StoreOffers pharmacy(Authentication authentication, @PathVariable String pharmacyId) {
         return coupons.forPharmacy(Current.require(authentication), pharmacyId);
     }
 
