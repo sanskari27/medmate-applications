@@ -97,8 +97,7 @@ public class CustomerCatalogService {
         throw missing();
     }
 
-    private CustomerCatalogViews.Detail drug(
-            AccountPrincipal actor, CatalogDocuments.DrugDetail drug, String month) {
+    private CustomerCatalogViews.Detail drug(AccountPrincipal actor, CatalogDocuments.DrugDetail drug, String month) {
         String category = firstCategory(drug.categories());
         return new CustomerCatalogViews.Detail(
                 drug.productId(),
@@ -125,8 +124,7 @@ public class CustomerCatalogService {
                 similar(actor, drug.productId(), category, month));
     }
 
-    private CustomerCatalogViews.Detail fmcg(
-            AccountPrincipal actor, CatalogDocuments.FmcgDetail item, String month) {
+    private CustomerCatalogViews.Detail fmcg(AccountPrincipal actor, CatalogDocuments.FmcgDetail item, String month) {
         String category = firstCategory(item.categories());
         return new CustomerCatalogViews.Detail(
                 item.productId(),
@@ -205,8 +203,8 @@ public class CustomerCatalogService {
         if (category.isEmpty()) {
             return List.of();
         }
-        CatalogDocuments.AvailablePage page = catalog.available(
-                stock.availableProductIds(month), category, "", 1, SIMILAR_LIMIT + 1);
+        CatalogDocuments.AvailablePage page =
+                catalog.available(stock.availableProductIds(month), category, "", 1, SIMILAR_LIMIT + 1);
         List<CatalogDocuments.AvailableItem> picked = new ArrayList<>();
         for (CatalogDocuments.AvailableItem item : page.items()) {
             if (productId.equals(item.productId())) {

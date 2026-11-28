@@ -17,12 +17,12 @@ import in.medmate.pharmacy_server.catalog.CatalogStore;
 import in.medmate.pharmacy_server.customer.NearbyRules;
 import in.medmate.pharmacy_server.customer.store.AddressStore;
 import in.medmate.pharmacy_server.customer.store.NearbyStore;
-import in.medmate.pharmacy_server.identity.pharmacy.PharmacyRules;
 import in.medmate.pharmacy_server.identity.access.AccountAuthentication;
 import in.medmate.pharmacy_server.identity.access.AccountPrincipal;
 import in.medmate.pharmacy_server.identity.access.AccountType;
 import in.medmate.pharmacy_server.identity.access.PharmacyRole;
 import in.medmate.pharmacy_server.identity.access.VerificationStatus;
+import in.medmate.pharmacy_server.identity.pharmacy.PharmacyRules;
 import in.medmate.pharmacy_server.shared.error.ApiExceptionHandler;
 import in.medmate.pharmacy_server.stock.store.StockStore;
 import java.math.BigDecimal;
@@ -129,12 +129,18 @@ class CustomerCatalogControllerTest {
         when(stock.onlineListings(anyList(), anyList(), eq("2026-11")))
                 .thenReturn(List.of(
                         new StockStore.OnlineListing(FAR, "MOOV1", new BigDecimal("44.00"), new BigDecimal("40.00"), 2),
-                        new StockStore.OnlineListing(SAME, "MOOV1", new BigDecimal("44.00"), new BigDecimal("39.00"), 0),
-                        new StockStore.OnlineListing(SAME, "MOOV1", new BigDecimal("44.00"), new BigDecimal("39.00"), 3),
-                        new StockStore.OnlineListing(NEAR, "MOOV1", new BigDecimal("44.00"), new BigDecimal("38.00"), 4),
-                        new StockStore.OnlineListing(CLOSED_SHOP, "MOOV1", new BigDecimal("44.00"), new BigDecimal("38.00"), 1),
-                        new StockStore.OnlineListing(NEAR, "OTHER", new BigDecimal("10.00"), new BigDecimal("9.00"), 1)));
-        when(catalog.available(anyList(), eq("Fever & Pain"), eq(""), eq(1), eq(9))).thenReturn(similarPage());
+                        new StockStore.OnlineListing(
+                                SAME, "MOOV1", new BigDecimal("44.00"), new BigDecimal("39.00"), 0),
+                        new StockStore.OnlineListing(
+                                SAME, "MOOV1", new BigDecimal("44.00"), new BigDecimal("39.00"), 3),
+                        new StockStore.OnlineListing(
+                                NEAR, "MOOV1", new BigDecimal("44.00"), new BigDecimal("38.00"), 4),
+                        new StockStore.OnlineListing(
+                                CLOSED_SHOP, "MOOV1", new BigDecimal("44.00"), new BigDecimal("38.00"), 1),
+                        new StockStore.OnlineListing(
+                                NEAR, "OTHER", new BigDecimal("10.00"), new BigDecimal("9.00"), 1)));
+        when(catalog.available(anyList(), eq("Fever & Pain"), eq(""), eq(1), eq(9)))
+                .thenReturn(similarPage());
 
         mvc.perform(get("/api/v1/customer/catalog/MOOV1")).andExpect(status().isUnauthorized());
         mvc.perform(get("/api/v1/customer/catalog/MOOV1").principal(account(AccountType.PHARMACY, false)))
@@ -193,7 +199,8 @@ class CustomerCatalogControllerTest {
     @Test
     void aMissingOrUnstockedProductIsNotFound() throws Exception {
         when(stock.availableProductIds("2026-11")).thenReturn(List.of("MOOV1"));
-        when(catalog.findMany(List.of("GONE"))).thenReturn(new CatalogStore.Found(List.of(), List.of(), List.of("GONE")));
+        when(catalog.findMany(List.of("GONE")))
+                .thenReturn(new CatalogStore.Found(List.of(), List.of(), List.of("GONE")));
 
         mvc.perform(get("/api/v1/customer/catalog/ ").principal(account(AccountType.CUSTOMER, false)))
                 .andExpect(status().isNotFound())
@@ -209,7 +216,8 @@ class CustomerCatalogControllerTest {
     void anFmcgProductUsesItsOwnCopyAndSkipsSimilarWhenItHasNoCategory() throws Exception {
         when(stock.availableProductIds("2026-11")).thenReturn(List.of("SOAP1"));
         when(addresses.selected(CUSTOMER)).thenReturn(Optional.of(address(null, null)));
-        when(catalog.findMany(List.of("SOAP1"))).thenReturn(new CatalogStore.Found(List.of(), List.of(soap()), List.of()));
+        when(catalog.findMany(List.of("SOAP1")))
+                .thenReturn(new CatalogStore.Found(List.of(), List.of(soap()), List.of()));
 
         mvc.perform(get("/api/v1/customer/catalog/SOAP1").principal(account(AccountType.CUSTOMER, false)))
                 .andExpect(status().isOk())
@@ -286,7 +294,8 @@ class CustomerCatalogControllerTest {
     }
 
     private static CatalogDocuments.AvailableItem available(String id, String name) {
-        return new CatalogDocuments.AvailableItem(id, name, name, new BigDecimal("71"), null, false, null, null, null, null);
+        return new CatalogDocuments.AvailableItem(
+                id, name, name, new BigDecimal("71"), null, false, null, null, null, null);
     }
 
     private static CatalogDocuments.DrugDetail drug() {
